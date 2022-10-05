@@ -28,11 +28,31 @@ def play4(game):
 
 def play5(game):
     print("On applique l'action Pinte de Spritz: L'adversaire perd un argument")
-    if game.other.arg >0:
-        game.other.arg -= 1 
+    l = [c for c in game.other.ingame_arg if c.discardable]
+    L = Deck(l)
+    if game.other.arg<=0:
+        "Votre adversaire n'a pas d'arguments votre action est inutile"
+    elif game.other.arg>0 and len(l)!=0:
+        game.other.arg -= 1
+        print("Voici les arguments de votre adversaire: ")
+        print(L)
+        try :
+            card = L.cards[int(input("Quelle carte choisissez vous de supprimer?"))-1]
+            game.other.ingame_arg.remove(card)
+        except IndexError as e:
+            print("Un numéro de carte qui existe plutôt...")
 
+        
+
+         
 def play6(game):
     print("On joue l'argument Jam")
+    game.current.arg +=1
+    game.arg_played += 1
+    game.current.ingame_arg.append(game.cardplayed)
+
+def play7(game):
+    print("On joue l'argument Style incontestable")
     game.current.arg +=1
     game.arg_played += 1
     game.current.ingame_arg.append(game.cardplayed)
@@ -48,17 +68,14 @@ Beauf = 13
 
 card1 = Card(1,play1,"Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour (Action)",0)
 card2 = Card(0, play2, "Faux Travail: Vous choisissez une carte dans la main de votre adversaire, elle retourne dans son deck (Action)",0)
-card3 = Card(0,play3,"Salade: Ne sert à rien (Action)",0,[Bouffe])
+card3 = Card(0,play3,"Salade: Ne sert à rien (Action)",0,type=[Bouffe])
 card4 = Card(1, play4, "Kiffeur: Vous choisissez une carte dans la main de votre adversaire",0)
 card5 = Card(0, play5, "Pinte de Spritz: L'adversaire se défausse d'un argument",0)
 card6 = Card(1, play6, "Jam: Je dois aider pour installer en plus",1)
-l1 = [card6,card2,card3,card4]
+card7 = Card(1, play7, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,discardable=False)
 
-a = Card(2,play1,"Je suis la carte 5",1)
-b = Card(2, play2, "Je suis la carte 6",0)
-c = Card(2,play3,"Je suis la carte 7",1)
-d = Card(2, play4, "Je suis la carte 8",0)
-l2 = [a,b,c,d]
+l1 = [card6,card7,card1,card4]
+l2 = [card5,card5,card2,card2]
 
 """Création des deux decks de départ"""
 

@@ -10,12 +10,13 @@ from random import shuffle
 class Card:
     """une carte"""
 
-    def __init__(self, color, play, description:str, argum:bool, type=[]) -> None:
+    def __init__(self, color, play, description:str, argum:bool, type=[],discardable=True) -> None:
         self.color = color
         self.play = play
         self.description = description
         self.arg = argum
         self.type = type
+        self.discardable = discardable
 
     def __str__(self):
         return(self.description)
@@ -28,7 +29,7 @@ class Deck:
         self.cards = cards
 
     def __str__(self):
-        return " \n".join([str(c) for c in self.cards])
+        return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
 
     def draw(self):
         return(self.cards.pop(-1))
