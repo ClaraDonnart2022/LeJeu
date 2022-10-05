@@ -76,14 +76,11 @@ class Game:
             if rep == "j":
                 try :
                     numcardplay = int(input("Laquelle?"))
-                    cardplayed = self.current.cards[numcardplay-1]
-                    if(self.arg_played<1 or cardplayed.arg == False):
-                        cardplayed.play(self)
+                    self.cardplayed = self.current.cards[numcardplay-1]
+                    if(self.arg_played<1 or self.cardplayed.arg == False):
+                        self.cardplayed.play(self)
                         self.current.cards.pop(numcardplay-1)
-                        self.discard.append(cardplayed)
-                        if cardplayed.arg :
-                            self.current.arg +=1
-                            self.arg_played += 1
+                        self.discard.append(self.cardplayed)
                     else:
                         print("Vous avez joué trop d'arguments")
                 except ValueError as e:
@@ -103,10 +100,15 @@ class Player:
         self.deck = deck
         self.hand = Hand(deck)
         self.arg = 0
+        self.ingame_arg = []
 
     @property 
     def cards(self):
         return(self.hand.cards)    
+
+    def __str__(self):
+        return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.ingame_arg)])
+    
 
 if __name__ == "__main__":
     pass
