@@ -35,6 +35,9 @@ class Deck:
     def shuffle(self):
         shuffle(self.cards)
 
+    def append(self,c):
+        self.cards.append(c)
+
 
 class Hand:
 
@@ -58,9 +61,11 @@ class Game:
         self.current = Player(players[0],deck1)
         self.other = Player(players[1], deck2)
         self.discard = []
+        self.arg_played = 0
 
     def turn(self):
-
+         
+        self.arg_played = 0
         self.current.cards.append(self.current.deck.draw())
         print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
         rep = "j"
@@ -69,19 +74,24 @@ class Game:
             rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
             if rep == "j":
                 try :
-                    cardplay = int(input("Laquelle?"))   
-                    self.current.cards[cardplay-1].play()
-                    cardplayed = self.current.cards.pop(cardplay-1)
-                    if cardplayed.arg:
-                        self.current.arg +=1
-                    self.discard.append(cardplayed)
+                    numcardplay = int(input("Laquelle?"))
+                    cardplayed = self.current.cards[numcardplay-1]
+                    if(self.arg_played<1 or cardplayed.arg == False):
+                        cardplayed.play(self)
+                        self.current.cards.pop(numcardplay-1)
+                        self.discard.append(cardplayed)
+                        if cardplayed.arg :
+                            self.current.arg +=1
+                            self.arg_played += 1
+                    else:
+                        print("Vous avez joué trop d'arguments")
                 except ValueError as e:
                     print("Grand fou met un numéro")
                 except IndexError as e:
                     print("Un numéro que tu as plutôt coco")
 
             print(f"Vous avez {self.current.arg} argument(s)")
-            self.current, self.other = self.other, self.current
+        self.current, self.other = self.other, self.current
 
 
 
