@@ -33,6 +33,23 @@ class Deck:
 
     def draw(self):
         return(self.cards.pop(-1))
+    #TODO: Gérer quand y a plus de cartes dans le deck
+
+    def draw_argument(self):
+        c = self.cards[0]
+        i=0
+        while not c.arg:
+            i+=1
+            c = self.cards[i]
+        return(self.cards.pop(i))
+
+    def draw_action(self):
+        c = self.cards[0]
+        i=0
+        while c.arg:
+            i+=1
+            c = self.cards[i]
+        return(self.cards.pop(i))
 
     def shuffle(self):
         shuffle(self.cards)
@@ -43,9 +60,9 @@ class Deck:
 
 class Hand:
 
-    def __init__(self,deck):
+    def __init__(self,deck,nhand = 3):
         self.cards = []
-        for i in range(3):
+        for i in range(nhand):
             self.cards.append(deck.draw())
     
     def __str__(self):
@@ -66,7 +83,7 @@ class Game:
         self.arg_played = 0
 
     def turn(self):
-         
+         #TODO: gérer mettre un numéro à la place de j et espace qui fait rien.
         self.arg_played = 0
         self.current.cards.append(self.current.deck.draw())
         print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
