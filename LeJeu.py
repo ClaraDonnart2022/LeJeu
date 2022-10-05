@@ -7,7 +7,7 @@
 from re import L
 from random import shuffle
 
-class Card():
+class Card:
     """une carte"""
 
     def __init__(self, color, play, description:str, argum:bool) -> None:
@@ -20,7 +20,7 @@ class Card():
         return(self.description)
 
 
-class Deck():
+class Deck:
     """Un deck"""
 
     def __init__(self, cards:list):
@@ -36,7 +36,7 @@ class Deck():
         shuffle(self.cards)
 
 
-class Hand():
+class Hand:
 
     def __init__(self,deck):
         self.cards = []
@@ -46,48 +46,15 @@ class Hand():
     def __str__(self):
         return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
 
-class Game():
+class Game:
     """ Un jeu de LeJeu."""
 
     def __init__(self):
         players = ["Hadri", "Clarou"]
 
-        """ Définition des fonctions des cartes """
+        """ Définition des decks """
 
-        def play1():
-            print("Appliquer le play de la carte 1")
-
-        def play2():
-            print("Appliquer le play de la carte 2")
-
-        def play3():
-            print("Appliquer le play de la carte 3")
-
-        def play4():
-            print("Appliquer le play de la carte 4")
-            
-
-        """ Création des cartes """
-
-        a = Card(1,play1,"Je suis la carte 1",0)
-        b = Card(1, play2, "Je suis la carte 2",1)
-        c = Card(1,play3,"Je suis la carte 3",1)
-        d = Card(1, play4, "Je suis la carte 4",0)
-        l1 = [a,b,c,d]
-
-        a = Card(2,play1,"Je suis la carte 5",1)
-        b = Card(2, play2, "Je suis la carte 6",0)
-        c = Card(2,play3,"Je suis la carte 7",1)
-        d = Card(2, play4, "Je suis la carte 8",0)
-        l2 = [a,b,c,d]
-
-        """Création des deux decks de départ"""
-
-        deck1 = Deck(l1)
-        deck2 = Deck(l2)
-        deck1.shuffle()
-        deck2.shuffle()
-
+        from deck import deck1, deck2
         self.current = Player(players[0],deck1)
         self.other = Player(players[1], deck2)
         self.discard = []
@@ -118,7 +85,7 @@ class Game():
 
 
 
-class Player():
+class Player:
 
     def __init__(self, name:str, deck):
         self.name = name
