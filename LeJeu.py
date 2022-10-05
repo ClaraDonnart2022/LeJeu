@@ -10,11 +10,12 @@ from random import shuffle
 class Card:
     """une carte"""
 
-    def __init__(self, color, play, description:str, argum:bool) -> None:
+    def __init__(self, color, play, description:str, argum:bool, type=[]) -> None:
         self.color = color
         self.play = play
         self.description = description
         self.arg = argum
+        self.type = type
 
     def __str__(self):
         return(self.description)
