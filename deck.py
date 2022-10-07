@@ -2,37 +2,53 @@
 
 from enum import Enum, unique
 from LeJeu import *
+from time import sleep
 
 """ Définition des fonctions des cartes """
 
+def decorate_play(function):
+    """Cette fonction génère le décorateur"""
+    
+    def wrapper(game):
+        """Le décorateur qui introduit la carte jouée"""
+        print(f"Vous jouez la carte {game.cardplayed}")
+        result = function(game)
+        return result
+    
+    return wrapper
+
+@decorate_play
 def play1(game):
     """Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour"""
-    print("On applique l'action Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour")
     game.arg_played -=2
 
+@decorate_play
 def play2(game):
     """Faux Travail: Vous choisissez une carte dans la main de votre adversaire, elle retourne dans son deck"""
-    print("On applique l'action Faux travail: Voici les cartes de votre adversaire: \n")
+    print("Voici les cartes de votre adversaire: \n")
     print(game.other.hand)
     cardnum = int(input("Quelle carte choisissez vous ?"))
     game.other.deck.append(game.other.cards.pop(cardnum-1))
     game.other.deck.shuffle()
 
+@decorate_play
 def play3(game):
     """Salade: Ne sert à rien"""
-    print("Vous jouez salade: \n ...\n il ne se passe rien")
+    sleep(1)
+    print("\n ...\n")
+    sleep(1)
+    print("il ne se passe rien")
 
+@decorate_play
 def play4(game):
     """Kiffeur: Vous choisissez une carte dans la main de votre adversaire"""
-    print("On applique l'action Kiffeur: Voici les cartes de votre adversaire: \n")
     print(game.other.hand)
     cardnum = int(input("Quelle carte choisissez vous ?"))
     game.current.cards.append(game.other.cards.pop(cardnum-1))
 
+@decorate_play
 def play5(game):
     """Pinte de Spritz: L'adversaire se défausse d'un argument"""
-
-    print("On applique l'action Pinte de Spritz: L'adversaire perd un argument")
     l = [c for c in game.other.ingame_arg if c.discardable]
     L = Deck(l)
 
@@ -50,54 +66,66 @@ def play5(game):
             game.other.ingame_arg.remove(card)
         except IndexError as e:
             print("Un numéro de carte qui existe plutôt...")
-       
+
+@decorate_play
 def play6(game):
     """Un argument basique"""
-    print("On joue l'argument Jam")
     game.current.arg +=1
     game.arg_played += 1
     game.current.ingame_arg.append(game.cardplayed)
 
+@decorate_play
 def play7(game):
-    #Un argument non défaussable
-    print("On joue l'argument Style incontestable")
+    """Un argument non défaussabl"""
     game.current.arg +=1
     game.arg_played += 1
     game.current.ingame_arg.append(game.cardplayed)
 
+@decorate_play
 def play8(game):
-    #Un argument pour l'autre camp mais qui fait piocher 3 cartes
-    print("On fait un pari stupide")
+    """Un argument pour l'autre camp mais qui fait piocher 3 cartes"""
     game.other.arg +=1
     game.other.ingame_arg.append(game.cardplayed)
     for k in range(3):
-        game.current.cards.append(game.current.deck.draw())
-    
+        try:
+            game.current.cards.append(game.current.deck.draw())
+        except IndexError:
+            pass  # deck vide
+        
+@decorate_play
 def play9(game):
     """Si le joueur courant n'a pas d'argument en main, en joue un depuis son deck"""
-    print("On joue l'action Gros Canon")
     l_hand = [c.arg for c in game.current.cards]
     if not True in l_hand:
-        game.current.deck.draw_argument().play(game)
-
+        try:
+            card_drawn = game.current.deck.draw_argument()
+            card_drawn.play(game)
+        except IndexError:
+            print("Il n'y plus d'argument dans votre deck cette carte n'a pas d'effet.")
+            pass
+    else:
+        print("Vous avez un argument en main, cette carte n'a pas d'effet")
+        
+@decorate_play
 def play10(game):
     """Pioche deux actions du deck"""
-    print("On joue l'action Jeune investisseur")
-    game.current.cards.append(game.current.deck.draw_action())
-    game.current.cards.append(game.current.deck.draw_action())
-
+    for i in range(2):
+        card_drawn= game.current.deck.draw_action()
+        if card_drawn is not None:
+            game.current.cards.append(card_drawn)
+    
+@decorate_play
 def play11(game):
     """Remplace toutes ses cartes par des cartes du deck"""
-    print("On joue l'action Courageux")
     nbcards = len(game.current.cards)
     newHand = Hand(game.current.deck, nbcards)
     game.current.deck.cards= game.current.deck.cards + game.current.cards
     game.current.hand = newHand
     game.current.deck.shuffle()
-    
+
+@decorate_play
 def play12(game):
     """Réorganise les trois premières cartes de votre deck"""
-    print("On joue l'action Bien Equipé")
     print("Voici les trois premières cartes de votre deck: ")
     l = []
     for k in range(3):
@@ -109,17 +137,15 @@ def play12(game):
     game.current.deck.cards = game.current.deck.cards + [l[indice3-1], l[indice2-1], l[indice1-1]]
         
 
-
-            
 """ Création des cartes """
 
-Bouffe = 11
-Picole = 12
-Beauf = 13
+BOUFFE = 11
+PICOLE = 12
+BEAUF = 13
 
 card1 = Card(1,play1,"Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour",0)
 card2 = Card(0, play2, "Faux Travail: Vous choisissez une carte dans la main de votre adversaire, elle retourne dans son deck",0)
-card3 = Card(0,play3,"Salade: Ne sert à rien",0,type=[Bouffe])
+card3 = Card(0,play3,"Salade: Ne sert à rien",0,type=[BOUFFE])
 card4 = Card(1, play4, "Kiffeur: Vous choisissez une carte dans la main de votre adversaire",0)
 card5 = Card(0, play5, "Pinte de Spritz: L'adversaire se défausse d'un argument",0)
 card6 = Card(1, play6, "Jam: Je dois aider pour installer en plus",1)

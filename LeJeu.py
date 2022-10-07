@@ -33,22 +33,31 @@ class Deck:
 
     def draw(self):
         return(self.cards.pop(-1))
-    #TODO: Gérer quand y a plus de cartes dans le deck
+
 
     def draw_argument(self):
+        """Pioche le premier argument du deck, cette fonction retourne None si il n'y en a plus dans le deck."""
         c = self.cards[0]
         i=0
-        while not c.arg:
-            i+=1
-            c = self.cards[i]
-        return(self.cards.pop(i))
+        try:
+            while not c.arg:
+                i+=1
+                c = self.cards[i]
+            return(self.cards.pop(i))
+        except IndexError: 
+            return None
+        
 
     def draw_action(self):
+    #TODO: Gérer quand il n'y a plus d'action (sinon boucle infinie)
         c = self.cards[0]
         i=0
         while c.arg:
-            i+=1
-            c = self.cards[i]
+            try:
+                i+=1
+                c = self.cards[i]
+            except IndexError: 
+                return None
         return(self.cards.pop(i))
 
     def shuffle(self):
@@ -63,7 +72,11 @@ class Hand:
     def __init__(self,deck,nhand = 3):
         self.cards = []
         for i in range(nhand):
-            self.cards.append(deck.draw())
+            try:
+                self.cards.append(deck.draw())
+            except IndexError:
+                pass  # deck vide
+            
     
     def __str__(self):
         return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
@@ -85,7 +98,11 @@ class Game:
     def turn(self):
          #TODO: gérer mettre un numéro à la place de j et espace qui fait rien.
         self.arg_played = 0
-        self.current.cards.append(self.current.deck.draw())
+        try:
+            self.current.cards.append(self.current.deck.draw())
+        except IndexError:
+            pass  # deck vide
+        
         print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
         rep = "j"
         while rep == "j" and len(self.current.cards)!=0:
@@ -95,6 +112,8 @@ class Game:
                 try :
                     numcardplay = int(input("Laquelle?"))
                     self.cardplayed = self.current.cards[numcardplay-1]
+
+                    #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
                     if(self.arg_played<1 or self.cardplayed.arg == False):
                         self.cardplayed.play(self)
                         self.current.cards.pop(numcardplay-1)
