@@ -7,6 +7,15 @@
 from re import L
 from random import shuffle
 
+HADRI = 1
+CLAROU = 2
+NEUTRE = 3
+AMOUR = 10
+BOUFFE = 11
+PICOLE = 12
+BEAUF = 13
+
+
 class Card:
     """une carte"""
 
@@ -31,9 +40,9 @@ class Deck:
     def __str__(self):
         return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
 
+    #TODO: créer un draw_type(self,type= None) qui combine draw draw_argument et draw_action
     def draw(self):
         return(self.cards.pop(-1))
-
 
     def draw_argument(self):
         """Pioche le premier argument du deck, cette fonction retourne None si il n'y en a plus dans le deck."""
@@ -49,16 +58,17 @@ class Deck:
         
 
     def draw_action(self):
-    #TODO: Gérer quand il n'y a plus d'action (sinon boucle infinie)
+        """Pioche la première action du deck: s'il n'y en a plus retourne None"""
         c = self.cards[0]
         i=0
-        while c.arg:
-            try:
+        try:
+            while c.arg:
                 i+=1
                 c = self.cards[i]
-            except IndexError: 
-                return None
-        return(self.cards.pop(i))
+            return(self.cards.pop(i))
+        except IndexError: 
+            return None
+        
 
     def shuffle(self):
         shuffle(self.cards)
@@ -77,9 +87,9 @@ class Hand:
             except IndexError:
                 pass  # deck vide
             
-    
     def __str__(self):
-        return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
+        return " \n".join(f"{i+1}. {c}" for i,c in enumerate(self.cards))
+
 
 class Game:
     """ Un jeu de LeJeu."""
@@ -93,10 +103,13 @@ class Game:
         self.current = Player(players[0],deck1)
         self.other = Player(players[1], deck2)
         self.discard = []
-        self.arg_played = 0
+
+    def discard_card(self, card, player):
+        self.discard.append(card)
+        player.hand.cards.remove(card)
 
     def turn(self):
-         #TODO: gérer mettre un numéro à la place de j et espace qui fait rien.
+         #TODO: gérer mettre un numéro à la place de j 
         self.arg_played = 0
         try:
             self.current.cards.append(self.current.deck.draw())
@@ -105,19 +118,18 @@ class Game:
         
         print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
         rep = "j"
-        while rep == "j" and len(self.current.cards)!=0:
+        while (rep == "j" or rep == "") and len(self.current.cards)!=0:
             print(self.current.hand)
             rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
             if rep == "j":
                 try :
                     numcardplay = int(input("Laquelle?"))
-                    self.cardplayed = self.current.cards[numcardplay-1]
+                    self.card_played = self.current.cards[numcardplay-1]
 
                     #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
-                    if(self.arg_played<1 or self.cardplayed.arg == False):
-                        self.cardplayed.play(self)
-                        self.current.cards.pop(numcardplay-1)
-                        self.discard.append(self.cardplayed)
+                    if(self.arg_played<1 or self.card_played.arg == False):
+                        self.discard_card(self.card_played, self.current)
+                        self.card_played.play(self)
                     else:
                         print("Vous avez joué trop d'arguments")
                 except ValueError as e:
@@ -125,7 +137,7 @@ class Game:
                 except IndexError as e:
                     print("Un numéro que tu as plutôt coco")
 
-            print(f"Vous avez {self.current.arg} argument(s)")
+            print(f"Vous avez {len(self.current.ingame_arg)} argument(s)")
         self.current, self.other = self.other, self.current
 
 
@@ -136,7 +148,13 @@ class Player:
         self.name = name
         self.deck = deck
         self.hand = Hand(deck)
-        self.arg = 0
+        #Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16) 
+        # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées 
+        # Le deuxième argument a pour but de stocker la carte quand elle arrivera
+        # Le troisième argument réfère au type de carte qui l'active
+        self.roi_de_la_bouffe = [0, None, BOUFFE]
+        self.princesse_des_coeurs = [0, None, AMOUR]
+        #Utile pour les cartes qui demande de discard un argument
         self.ingame_arg = []
 
     @property 
@@ -146,6 +164,10 @@ class Player:
     def __str__(self):
         return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.ingame_arg)])
     
+
+class Interface:
+    """Classe d'interface utilisateur"""
+
 
 if __name__ == "__main__":
     pass

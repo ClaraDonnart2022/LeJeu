@@ -7,14 +7,33 @@ from time import sleep
 """ Définition des fonctions des cartes """
 
 def decorate_play(function):
-    """Cette fonction génère le décorateur"""
-    
+    """Cette fonction génère le décorateur:
+    """
     def wrapper(game):
         """Le décorateur qui introduit la carte jouée"""
-        print(f"Vous jouez la carte {game.cardplayed}")
+        print(f"Vous jouez la carte {game.card_played}")
         result = function(game)
         return result
-    
+    return wrapper
+
+def decorate_type(function):
+    """Cette fonction génère le décorateur: 
+    """
+    def wrapper(game):
+        """décorateur: si la carte spe est en jeu, l'itère de 1
+        dans la limite de 3 (se transforme en argument)"""
+        #Si la carte spe a été jouée -> On augmente le compteur de 1
+        
+        CARD_SPE = [game.current.princesse_des_coeurs, game.current.roi_de_la_bouffe]
+        for card_spe in CARD_SPE:
+            if card_spe[1] is not None and card_spe[2] in game.card_played.type:
+                card_spe[0] += 1
+                #Si 3 cartes du bon type ont été jouées, la carte est un argument en jeu, on ajoute 1 au nombre d'arguments joués.
+                print(card_spe[0])
+                if card_spe[0] == 3:
+                    game.current.ingame_arg.append(card_spe[1])      
+        result = function(game)
+        return result
     return wrapper
 
 @decorate_play
@@ -32,6 +51,7 @@ def play2(game):
     game.other.deck.shuffle()
 
 @decorate_play
+@decorate_type
 def play3(game):
     """Salade: Ne sert à rien"""
     sleep(1)
@@ -53,12 +73,11 @@ def play5(game):
     L = Deck(l)
 
     #Si l'adversaire a pas d'argument
-    if game.other.arg<=0:
+    if len(game.other.ingame_arg)<=0:
         "Votre adversaire n'a pas d'arguments votre action est inutile"
 
     #Si l'adversaire a des arguments défaussables
-    elif game.other.arg>0 and len(l)!=0:
-        game.other.arg -= 1
+    elif len(game.other.ingame_arg)>0 and len(l)!=0:
         print("Voici les arguments de votre adversaire: ")
         print(L)
         try :
@@ -68,24 +87,17 @@ def play5(game):
             print("Un numéro de carte qui existe plutôt...")
 
 @decorate_play
+@decorate_type
 def play6(game):
-    """Un argument basique"""
-    game.current.arg +=1
+    """Un argument"""
     game.arg_played += 1
-    game.current.ingame_arg.append(game.cardplayed)
+    game.current.ingame_arg.append(game.card_played)
 
-@decorate_play
-def play7(game):
-    """Un argument non défaussabl"""
-    game.current.arg +=1
-    game.arg_played += 1
-    game.current.ingame_arg.append(game.cardplayed)
 
 @decorate_play
 def play8(game):
     """Un argument pour l'autre camp mais qui fait piocher 3 cartes"""
-    game.other.arg +=1
-    game.other.ingame_arg.append(game.cardplayed)
+    game.other.ingame_arg.append(game.card_played)
     for k in range(3):
         try:
             game.current.cards.append(game.current.deck.draw())
@@ -136,29 +148,54 @@ def play12(game):
     indice3 = int(input("En dernier?"))
     game.current.deck.cards = game.current.deck.cards + [l[indice3-1], l[indice2-1], l[indice1-1]]
         
+@decorate_play
+def play13(game):
+    """Baillement: Vous défaussez une carte. votre adversaire en défausse deux"""
+    game.current.nb_of_card_to_discard=1
+    game.other.nb_of_card_to_discard=2
+    for player in [game.current, game.other]:
+        for k in range(player.nb_of_card_to_discard):
+            print(f"Voici les cartes de {player.name}: ")
+            sleep(1)
+            print(player.hand)
+            card_chosen = player.cards[int(input("Quelle carte voulez vous défausser? "))-1]
+            game.discard_card(card_chosen,player)
+
+#TODO: gérer si jouée deux fois
+@decorate_play
+def play14(game):
+    """Roi de la Bouffe: Cette action reste en jeu. Jouez 3 cartes BOUFFE pour la transformer en argument."""
+    game.current.roi_de_la_bouffe[1] = game.card_played
+
+@decorate_type
+@decorate_play
+def play16(game):
+    """Princesse des coeurs: Cette action reste en jeu. Jouez 3 cartes BOUFFE pour la transformer en argument."""
+    game.current.princesse_des_coeurs[1] = game.card_played
+
 
 """ Création des cartes """
 
-BOUFFE = 11
-PICOLE = 12
-BEAUF = 13
+card1 = Card(HADRI,play1,"Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour",0)
+card2 = Card(NEUTRE, play2, "Faux Travail: Vous choisissez une carte dans la main de votre adversaire, elle retourne dans son deck",0)
+card3 = Card(NEUTRE,play3,"Salade: Ne sert à rien",0,type=[BOUFFE])
+card4 = Card(HADRI, play4, "Kiffeur: Vous choisissez une carte dans la main de votre adversaire",0)
+card5 = Card(NEUTRE, play5, "Pinte de Spritz: L'adversaire se défausse d'un argument",0)
+card6 = Card(HADRI, play6, "Jam: Je dois aider pour installer en plus",1)
+card7 = Card(HADRI, play6, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,discardable=False)
+card8 = Card(HADRI, play8, "Pari stupide: cet argument est pour votre adversaire. Vous piochez 3 cartes",0)
+card9 = Card(HADRI, play9, "Gros Canon: Si vous n'avez pas d'argument en main, en joue un depuis votre deck",0)
+card10 = Card(HADRI, play10, "Jeune investisseur: Vous piochez deux actions",0)
+card11 = Card(HADRI, play11, "Courageux: Echangez toutes vos cartes avec des cartes de votre deck",0)
+card12 = Card(HADRI, play12, "Bien équipé: Vous réorganisez les trois premières cartes de votre deck",0)
+card13 = Card(NEUTRE, play13, "Baillement: Vous défausser une carte. Votre adversaire en défausse deux",0)
+card14 = Card(HADRI, play14, "Roi de la Bouffe: Cette action reste en jeu. Jouez 3 cartes Bouffe pour la transformer en Argument",0,type=[BOUFFE])
+card15 = Card(CLAROU, play6, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,type=[BEAUF],discardable=False)
+card16 = Card(CLAROU, play16, "Princesse des coeurs: Cette action reste en jeu. Jouez 3 cartes Amour pour la transformeren Argument.",0, type = [AMOUR])
 
-card1 = Card(1,play1,"Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour",0)
-card2 = Card(0, play2, "Faux Travail: Vous choisissez une carte dans la main de votre adversaire, elle retourne dans son deck",0)
-card3 = Card(0,play3,"Salade: Ne sert à rien",0,type=[BOUFFE])
-card4 = Card(1, play4, "Kiffeur: Vous choisissez une carte dans la main de votre adversaire",0)
-card5 = Card(0, play5, "Pinte de Spritz: L'adversaire se défausse d'un argument",0)
-card6 = Card(1, play6, "Jam: Je dois aider pour installer en plus",1)
-card7 = Card(1, play7, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,discardable=False)
-card8 = Card(1, play8, "Pari stupide: cet argument est pour votre adversaire. Vous piochez 3 cartes",0)
-card9 = Card(1, play9, "Gros Canon: Si vous n'avez pas d'argument en main, en joue un depuis votre deck",0)
-card10 = Card(1, play10, "Jeune investisseur: Vous piochez deux actions",0)
-card11 = Card(1, play11, "Courageux: Echangez toutes vos cartes avec des cartes de votre deck",0)
-card12 = Card(1, play12, "Bien équipé: Vous réorganisez les trois premières cartes de votre deck",0)
 
-
-l1 = [card1,card2,card3,card4,card5,card6,card7,card8,card9,card10,card12]
-l2 = [card1,card2,card3,card4,card5,card6,card7,card8,card9,card10,card12]
+l1 = [card3,card3,card3,card3,card3,card3,card14,card8,card9,card10,card14]
+l2 = [card1,card2,card3,card4,card5,card6,card7,card8,card9,card10,card14]
 
 """Création des deux decks de départ"""
 
