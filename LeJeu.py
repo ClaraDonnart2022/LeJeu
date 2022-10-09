@@ -111,33 +111,37 @@ class Game:
     def turn(self):
          #TODO: gérer mettre un numéro à la place de j 
         self.arg_played = 0
-        try:
-            self.current.cards.append(self.current.deck.draw())
-        except IndexError:
-            pass  # deck vide
-        
-        print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
-        rep = "j"
-        while (rep == "j" or rep == "") and len(self.current.cards)!=0:
-            print(self.current.hand)
-            rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
-            if rep == "j":
-                try :
-                    numcardplay = int(input("Laquelle?"))
-                    self.card_played = self.current.cards[numcardplay-1]
+        #Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
+        if self.current.allowed_to_play:
+            try:
+                self.current.cards.append(self.current.deck.draw())
+            except IndexError:
+                pass  # deck vide
+            
+            print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
+            rep = "j"
+            while (rep == "j" or rep == "") and len(self.current.cards)!=0:
+                print(self.current.hand)
+                rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
+                if rep == "j":
+                    try :
+                        numcardplay = int(input("Laquelle?"))
+                        self.card_played = self.current.cards[numcardplay-1]
 
-                    #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
-                    if(self.arg_played<1 or self.card_played.arg == False):
-                        self.discard_card(self.card_played, self.current)
-                        self.card_played.play(self)
-                    else:
-                        print("Vous avez joué trop d'arguments")
-                except ValueError as e:
-                    print("Grand fou met un numéro")
-                except IndexError as e:
-                    print("Un numéro que tu as plutôt coco")
+                        #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
+                        if(self.arg_played<1 or self.card_played.arg == False):
+                            self.discard_card(self.card_played, self.current)
+                            self.card_played.play(self)
+                        else:
+                            print("Vous avez joué trop d'arguments")
+                    except ValueError as e:
+                        print("Grand fou met un numéro")
+                    except IndexError as e:
+                        print("Un numéro que tu as plutôt coco")
 
-            print(f"Vous avez {len(self.current.ingame_arg)} argument(s)")
+                print(f"Vous avez {len(self.current.ingame_arg)} argument(s)")
+        else:
+            self.current.allowed_to_play = True
         self.current, self.other = self.other, self.current
 
 
@@ -148,6 +152,8 @@ class Player:
         self.name = name
         self.deck = deck
         self.hand = Hand(deck)
+        #Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
+        self.allowed_to_play = True
         #Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16) 
         # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées 
         # Le deuxième argument a pour but de stocker la carte quand elle arrivera

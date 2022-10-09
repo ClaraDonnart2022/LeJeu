@@ -3,6 +3,7 @@
 from enum import Enum, unique
 from LeJeu import *
 from time import sleep
+from random import *
 
 """ Définition des fonctions des cartes """
 
@@ -173,6 +174,20 @@ def play16(game):
     """Princesse des coeurs: Cette action reste en jeu. Jouez 3 cartes BOUFFE pour la transformer en argument."""
     game.current.princesse_des_coeurs[1] = game.card_played
 
+@decorate_play
+def play17(game):
+    """Sieste inopinée: l'adversaire passe son prochain tour"""
+    game.other.allowed_to_play = False
+
+@decorate_play
+def play18(game):
+    """Rire mignon: L'adversaire se défausse d'une carte aléatoire"""
+    #Choisit une carte alétoire du deck de l'adversaire
+    card = choice(game.other.cards)
+    game.discard_card(card,game.other)
+
+
+
 
 """ Création des cartes """
 
@@ -192,9 +207,10 @@ card13 = Card(NEUTRE, play13, "Baillement: Vous défausser une carte. Votre adve
 card14 = Card(HADRI, play14, "Roi de la Bouffe: Cette action reste en jeu. Jouez 3 cartes Bouffe pour la transformer en Argument",0,type=[BOUFFE])
 card15 = Card(CLAROU, play6, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,type=[BEAUF],discardable=False)
 card16 = Card(CLAROU, play16, "Princesse des coeurs: Cette action reste en jeu. Jouez 3 cartes Amour pour la transformeren Argument.",0, type = [AMOUR])
+card17 = Card(CLAROU, play17, "Sieste inopinée: L'adversaire passe son prochain tour",0)
+card18 = Card(CLAROU, play18, "Rire mignon: l'adversaire se défausse d'une carte aléatoire",0)
 
-
-l1 = [card3,card3,card3,card3,card3,card3,card14,card8,card9,card10,card14]
+l1 = [card17,card17,card17,card17,card18,card18,card18,card18,card9,card10,card14]
 l2 = [card1,card2,card3,card4,card5,card6,card7,card8,card9,card10,card14]
 
 """Création des deux decks de départ"""
