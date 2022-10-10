@@ -60,12 +60,14 @@ def play3(game):
     sleep(1)
     print("il ne se passe rien")
 
+
 @decorate_play
 def play4(game):
     """Kiffeur: Vous choisissez une carte dans la main de votre adversaire"""
-    print(game.other.hand)
-    cardnum = int(input("Quelle carte choisissez vous ?"))
-    game.current.cards.append(game.other.cards.pop(cardnum-1))
+    NB_OF_CARD_CHOSEN = 1
+    cards = game.choose_in_deck(NB_OF_CARD_CHOSEN,game.other.hand)
+    cards_deck_to_deck(cards, game.current.hand, game.other.hand)
+    
 
 @decorate_play
 def play5(game):
@@ -75,17 +77,13 @@ def play5(game):
 
     #Si l'adversaire a pas d'argument
     if len(game.other.ingame_arg)<=0:
-        "Votre adversaire n'a pas d'arguments votre action est inutile"
+        print("Votre adversaire n'a pas d'arguments votre action est inutile")
 
     #Si l'adversaire a des arguments défaussables
     elif len(game.other.ingame_arg)>0 and len(l)!=0:
-        print("Voici les arguments de votre adversaire: ")
-        print(L)
-        try :
-            card = L.cards[int(input("Quelle carte choisissez vous de supprimer?"))-1]
-            game.other.ingame_arg.remove(card)
-        except IndexError as e:
-            print("Un numéro de carte qui existe plutôt...")
+        card = choice(L)
+        game.other.ingame_arg.remove(card)
+
 
 @decorate_play
 @decorate_type
@@ -97,7 +95,7 @@ def play6(game):
 
 @decorate_play
 def play8(game):
-    """Un argument pour l'autre camp mais qui fait piocher 3 cartes"""
+    """Pari stupide: Un argument pour l'autre camp mais qui fait piocher 3 cartes"""
     game.other.ingame_arg.append(game.card_played)
     for k in range(3):
         try:
@@ -111,7 +109,7 @@ def play9(game):
     l_hand = [c.arg for c in game.current.cards]
     if not True in l_hand:
         try:
-            card_drawn = game.current.deck.draw_argument()
+            card_drawn = game.current.deck.draw_type(isarg = 1)
             card_drawn.play(game)
         except AttributeError:
             print("Il n'y plus d'argument dans votre deck cette carte n'a pas d'effet.")
@@ -123,7 +121,7 @@ def play9(game):
 def play10(game):
     """Pioche deux actions du deck"""
     for i in range(2):
-        card_drawn= game.current.deck.draw_action()
+        card_drawn= game.current.deck.draw_type(isarg = 0)
         if card_drawn is not None:
             game.current.cards.append(card_drawn)
     
@@ -214,7 +212,11 @@ def play23(game):
 @decorate_play
 def play24(game):
     """Double date: Vous choisissez deux cartes neutres restantes"""
-    game.choose_in_deck(2,game.rest, color=NEUTRE)
+    NB_OF_CARD_CHOSEN = 2
+    # Le joueur choisit deux cartes NEUTRE dans le deck restant 
+    cards = game.choose_in_deck(NB_OF_CARD_CHOSEN, game.rest, color=NEUTRE)
+    # On met les cartes choisies dans la main du joueur 
+    cards_deck_to_deck(cards, game.current.hand, game.rest)
 
 @decorate_play
 def play25(game):
@@ -244,14 +246,58 @@ def play26(game):
 @decorate_play
 def play27(game):
     """Carrot Cake: Vous choisissez une carte bouffe de votre deck"""
-    game.choose_in_deck(1,game.current.deck, type=BOUFFE)
+    NB_OF_CARD_CHOSEN = 1
+    # Le joueur choisit une cartes BOUFFE dans son deck
+    cards = game.choose_in_deck(NB_OF_CARD_CHOSEN, game.current.deck, type=BOUFFE)
+    # On met les cartes choisies dans la main du joueur 
+    cards_deck_to_deck(cards, game.current.hand, game.current.deck)
 
-@decorate_type
 @decorate_play
 def play28(game):
-    """Fonce dalle: Vous choisissez deux cartes Bouffe restantes"""
-    game.choose_in_deck(2,game.rest, type=BOUFFE)
+    """Grosse dalle: Vous choisissez deux cartes Bouffe restantes"""
+    NB_OF_CARD_CHOSEN = 2
+    # Le joueur choisit deux cartes BOUFFE dans le deck restant
+    cards = game.choose_in_deck(NB_OF_CARD_CHOSEN, game.rest, type=BOUFFE)
+    # On met les cartes choisies dans la main du joueur 
+    # si choose_in_deck -> None
+    try:
+        cards_deck_to_deck(cards, game.current.hand, game.rest)
+    except TypeError:
+        pass
 
+def play29(game):
+    """Surprise: Vous prenez une carte aléatoire dans la main de votre adversaire"""
+    try:
+        card = choice(game.other.cards)
+        game.current.cards.append(card)
+    except IndexError or TypeError:
+        print("L'adversaire n'a plus de carte")
+
+def play30(game):
+    """Kiffeuse: Vous choisissez une carte parmi les trois premières du deck adverse"""
+    NB_OF_CARD_CHOSEN = 1
+    # Le joueur choisit une carte dans 
+    deck_to_choose = Deck(game.other.deck.cards[0:3])
+    cards = game.choose_in_deck(NB_OF_CARD_CHOSEN, deck_to_choose)
+    # On met les cartes choisies dans la main du joueur 
+    cards_deck_to_deck(cards, game.current.hand, game.other.deck)
+
+def play31(game):
+    """Matin difficile: Au début de son prochain tour le joueur adverse ne pioche pas."""
+    game.other.allowed_to_play[2] = False
+
+def play33(game):
+    """10h du mat on est déjà à fond: Vous piochez des cartes Picole: jusqu'à avoir autant de cartes que votre adversaire"""
+    for k in range(len(game.other.cards)):
+        card = game.current.deck.draw_type(istype= PICOLE)
+        if card != None:
+            game.current.cards.append(card)
+
+def cards_deck_to_deck(cards, deck_recieve,deck_send):
+    """Passe une liste de carte du deck_send au deck_recieve: prend en argument la liste le deck1 et le deck2"""
+    for card in cards:
+        deck_recieve.cards.append(card)
+        deck_send.cards.remove(card)
 
 
 
@@ -284,9 +330,15 @@ card24 = Card(NEUTRE, play24, "Double date: Vous choisissez deux cartes neutres 
 card25 = Card(NEUTRE, play25, "Jeu de rôle: Au début du prochain tour adverse, vous piochez à sa place (dans son deck)", 0)
 card26 = Card(NEUTRE, play26, "Bisous: Chaque joueur donne une carte à l'autre", 0, type=[AMOUR])
 card27 = Card(NEUTRE, play27, "Carrot Cake: Vous choisissez une carte bouffe de votre deck", 0, type=[BOUFFE])
+card28 = Card(NEUTRE, play28, "Grosse dalle: Vous choisissez deux cartes Bouffe restantes",0)
+card29 = Card(NEUTRE, play29, "Surprise: Vous prenez une carte aléatoire dans la main de votre adversaire.",0)
+card30 = Card(CLAROU, play30, "Kiffeuse: Vous choisissez une carte parmi les trois premières du deck adverse",0, type=[BEAUF])
+card31 = Card(NEUTRE, play31, "Matin difficile: Au début de son prochain tour le joueur adverse ne pioche pas.",0, type=[PICOLE])
+card32 = Card(NEUTRE, play5, "Black-out:L'adversaire perd son dernier argument",0, type=[PICOLE])
+card33 = Card(NEUTRE, play33, "10h du mat on est déjà à fond: Vous piochez des cartes Picole: jusqu'à avoir autant de cartes que votre adversaire", 0, type=[PICOLE, BEAUF])
 
-l1 = [card27,card27,card27,card27,card27,card18,card18,card18,card9,card10,card14]
-l2 = [card12,card12,card12,card12,card5,card6,card7,card8,card9,card10,card14]
+l1 = [card31,card31,card31,card31,card33,card33,card33,card33,card33,card10,card14]
+l2 = [card9,card10,card10,card9,card9,card9,card7,card8,card9,card10,card14]
 rest = [card2,card2,card5,card5,card5,card13,card7,card8,card9,card10,card22]
 
 
@@ -298,3 +350,4 @@ rest = Deck(rest)
 
 deck1.shuffle()
 deck2.shuffle()
+

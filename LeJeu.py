@@ -46,32 +46,31 @@ class Deck:
     def draw(self):
         return(self.cards.pop(-1))
 
-    def draw_argument(self):
-        """Pioche le premier argument du deck, cette fonction retourne None si il n'y en a plus dans le deck."""
+    def draw_type(self, isarg= None, istype= None):
+        """isarg = 1: Pioche le premier argument du deck
+        isarg = 0: Pioche la première action du deck
+        Si isarg = None et istype non None:
+        Pioche la prochaine carte du type
+        s'il n'y en a plus retourne None"""
+        #Prend la dernière carte et pas la première a priori
         c = self.cards[0]
+        if isarg is not None and istype is None:
+            A = c.arg != isarg
+        elif istype is not None and isarg is None:
+            A = c.type != istype
         i=0
         try:
-            while not c.arg:
+            while A:
                 i+=1
                 c = self.cards[i]
+                if isarg is not None:
+                    A = c.arg != isarg
+                elif istype is not None:
+                    A = istype in c.type
             return(self.cards.pop(i))
         except IndexError: 
             return None
-        
-
-    def draw_action(self):
-        """Pioche la première action du deck: s'il n'y en a plus retourne None"""
-        c = self.cards[0]
-        i=0
-        try:
-            while c.arg:
-                i+=1
-                c = self.cards[i]
-            return(self.cards.pop(i))
-        except IndexError: 
-            return None
-        
-
+      
     def shuffle(self):
         shuffle(self.cards)
 
@@ -121,33 +120,34 @@ class Game:
     
     def choose_in_deck(self, NB_OF_CARDS,deck, color=None, type=None):
         """Fonction qui prend en argument le type (BOUFFE, AMOUR etc...) ou la couleur (HADRI, CLAROU, NEUTRE) 
-        le deck
+        le deck (ou hand)
         et le nombre de cartes à prendre et permet au joueur de choisir dans les cartes restantes d'un deck
         des cartes spéciales
-        Ne retourne rien """
+        Retourne les cartes choisies ou None"""
         #Crée la liste des cartes concernés dans les cartes restantes
         if color is not None and type is None:
             deck_spe = [card for card in deck.cards if card.color == color]
         elif type is not None and color is None:
             deck_spe = [card for card in deck.cards if type in card.type]
-        elif type is not None and color is not None:
+        elif type is None and color is None:
             deck_spe = deck.cards
 
         #test s'il reste des cartes du type ou de la couleur choisie
         if len(deck_spe) >0:
-            print("Voici ce qu'il reste: ")
-            #Affiche les cartes restante qui ont la spécificité demandée
-            print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(deck_spe)))
-
+            card_chosen_list = []
+            print("Voici les cartes:")
             #Permet de choisir les cartes voulues dans la liste
-            for k in range(NB_OF_CARDS):
-                print("Il reste:")
+            while len(deck_spe)>0 and len(card_chosen_list) < NB_OF_CARDS:
                 print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(deck_spe)))
-                card_chosen = deck_spe.pop(int(input("Quelle carte voulez-vous?"))-1)
-                self.current.cards.append(card_chosen)
-                deck.cards.remove(card_chosen)
+                try:
+                    card_chosen = deck_spe.pop(int(input("Quelle carte voulez-vous?"))-1)
+                    card_chosen_list.append(card_chosen)
+                except ValueError:
+                    pass
+            return(card_chosen_list)
         else:
             print("Il n'en reste plus")
+            return(None)
         
 
     def turn(self):
@@ -157,8 +157,10 @@ class Game:
         if self.current.allowed_to_play[0]:
             try:
                 #Si jeu  de rôle a été jouée (num 25) l'adversaire pioche à votre place
-                if not self.current.draw_instead:
+                #Si Matin difficile a été jouée (num 31), le joueur ne pioche pas
+                if not self.current.draw_instead and self.current.allowed_to_play[2]:
                     self.current.cards.append(self.current.deck.draw())
+                    self.current.allowed_to_play[2] = True
                 else:
                     self.other.cards.append(self.current.deck.draw())
                     self.current.draw_instead = False
@@ -184,9 +186,9 @@ class Game:
                         else:
                             print("Vous avez joué trop d'arguments")
                     except ValueError as e:
-                        print("Grand fou met un numéro")
+                        print("Ce n'es pas un numéro")
                     except IndexError as e:
-                        print("Un numéro que tu as plutôt coco")
+                        print("Un numéro que tu as plutôt")
 
                 print(f"Vous avez {len(self.current.ingame_arg)} argument(s)")
         else:
@@ -205,9 +207,10 @@ class Player:
         self.hand = Hand(deck)
         #Spécifique à Jeu de rôle (num 25): pioche à la place de l'autre à son prochain tour
         self.draw_instead = False
-        #Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
+        #1er arg: Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
         #Et aux cartes qui impose de ne pas jouer plus de x cartes (ex: Posé num 19)
-        self.allowed_to_play = [True, NB_OF_CARD_IN_DECK]
+        #3eme arg: "allowed_to_draw" spécifique à la carte matin difficile (num 31)
+        self.allowed_to_play = [True, NB_OF_CARD_IN_DECK, True]
         #Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16) 
         # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées 
         # Le deuxième argument a pour but de stocker la carte quand elle arrivera
