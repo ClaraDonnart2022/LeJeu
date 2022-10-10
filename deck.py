@@ -210,20 +210,47 @@ def play23(game):
     """Pipi, les dents et au lit: Votre adversaire ne peut jouer qu'une carte au prochain tour"""
     game.other.allowed_to_play[1] = 1
 
+@decorate_type
 @decorate_play
 def play24(game):
     """Double date: Vous choisissez deux cartes neutres restantes"""
-    print("Voici les cartes neutres qui restent")
-    print(game.rest_neutre)
-    indice = int(input("Quelle carte voulez-vous?"))
-    game.current.cards.append(game.rest_neutre.cards.pop(indice-1))
-    indice = int(input("Et?"))
-    game.current.cards.append(game.rest_neutre.cards.pop(indice-1))
+    game.choose_in_deck(2,game.rest, color=NEUTRE)
 
 @decorate_play
 def play25(game):
     """Jeu de rôle: Au début du prochain tour adverse, vous piochez à sa place (dans son deck)"""
     game.other.draw_instead = True
+
+@decorate_type
+@decorate_play
+def play26(game):
+    #TODO: changer la boucle pas très jolie
+    """Bisous: Chaque joueur donne une carte à l'autre. Si l'un des deux joueurs n'a pas de cartes
+    l'autre lui en donne une quand même"""
+    for player in [game.current, game.other]:
+        if len(player.cards >0):
+            print(f"Voici les cartes de {player.name}: ")
+            sleep(1)
+            print(player.hand)
+            card_chosen = player.cards[int(input("Quelle carte voulez vous donner? "))-1]
+            player.cards.remove(card_chosen)
+            #Va chercher l'autre joueur
+            for player2 in [game.current, game.other]:
+                if player2 != player:
+                    #Lui ajoute la carte choisie dans sa main
+                    player2.cards.append(card_chosen)
+
+@decorate_type
+@decorate_play
+def play27(game):
+    """Carrot Cake: Vous choisissez une carte bouffe de votre deck"""
+    game.choose_in_deck(1,game.current.deck, type=BOUFFE)
+
+@decorate_type
+@decorate_play
+def play28(game):
+    """Fonce dalle: Vous choisissez deux cartes Bouffe restantes"""
+    game.choose_in_deck(2,game.rest, type=BOUFFE)
 
 
 
@@ -255,19 +282,19 @@ card22 = Card(NEUTRE, play22, "Kebab: Place une carte salade dans le deck de cha
 card23 = Card(HADRI, play23, "Pipi, les dents et au lit: Votre adversaire ne peut jouer qu'une carte au prochain tour", 0)
 card24 = Card(NEUTRE, play24, "Double date: Vous choisissez deux cartes neutres restantes", 0, type=[AMOUR])
 card25 = Card(NEUTRE, play25, "Jeu de rôle: Au début du prochain tour adverse, vous piochez à sa place (dans son deck)", 0)
+card26 = Card(NEUTRE, play26, "Bisous: Chaque joueur donne une carte à l'autre", 0, type=[AMOUR])
+card27 = Card(NEUTRE, play27, "Carrot Cake: Vous choisissez une carte bouffe de votre deck", 0, type=[BOUFFE])
 
-
-l1 = [card25,card25,card25,card25,card21,card18,card18,card18,card9,card10,card14]
+l1 = [card27,card27,card27,card27,card27,card18,card18,card18,card9,card10,card14]
 l2 = [card12,card12,card12,card12,card5,card6,card7,card8,card9,card10,card14]
 rest = [card2,card2,card5,card5,card5,card13,card7,card8,card9,card10,card22]
-rest_neutre = [card for card in rest if card.color == NEUTRE]
 
 
 """Création des deux decks de départ"""
 
 deck1 = Deck(l1)
 deck2 = Deck(l2)
-rest_neutre = Deck(rest_neutre)
+rest = Deck(rest)
 
 deck1.shuffle()
 deck2.shuffle()

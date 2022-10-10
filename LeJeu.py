@@ -100,11 +100,11 @@ class Game:
         players = ["Hadri", "Clarou"]
 
         """ Définition des decks """
-        from deck import deck1, deck2, rest_neutre
+        from deck import deck1, deck2, rest
         self.current = Player(players[0],deck1)
         self.other = Player(players[1], deck2)
         # Spécifique aux cartes permettants de choisir dans les cartes restantes
-        self.rest_neutre = rest_neutre
+        self.rest = rest
         self.discard = []
 
     def discard_card(self, card, player):
@@ -118,6 +118,37 @@ class Game:
             l.append(self.current.deck.draw())
             print(k+1,". ", l[k], '\n')
         return(l)
+    
+    def choose_in_deck(self, NB_OF_CARDS,deck, color=None, type=None):
+        """Fonction qui prend en argument le type (BOUFFE, AMOUR etc...) ou la couleur (HADRI, CLAROU, NEUTRE) 
+        le deck
+        et le nombre de cartes à prendre et permet au joueur de choisir dans les cartes restantes d'un deck
+        des cartes spéciales
+        Ne retourne rien """
+        #Crée la liste des cartes concernés dans les cartes restantes
+        if color is not None and type is None:
+            deck_spe = [card for card in deck.cards if card.color == color]
+        elif type is not None and color is None:
+            deck_spe = [card for card in deck.cards if type in card.type]
+        elif type is not None and color is not None:
+            deck_spe = deck.cards
+
+        #test s'il reste des cartes du type ou de la couleur choisie
+        if len(deck_spe) >0:
+            print("Voici ce qu'il reste: ")
+            #Affiche les cartes restante qui ont la spécificité demandée
+            print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(deck_spe)))
+
+            #Permet de choisir les cartes voulues dans la liste
+            for k in range(NB_OF_CARDS):
+                print("Il reste:")
+                print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(deck_spe)))
+                card_chosen = deck_spe.pop(int(input("Quelle carte voulez-vous?"))-1)
+                self.current.cards.append(card_chosen)
+                deck.cards.remove(card_chosen)
+        else:
+            print("Il n'en reste plus")
+        
 
     def turn(self):
          #TODO: gérer mettre un numéro à la place de j 
