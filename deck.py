@@ -195,8 +195,35 @@ def play21(game):
     game.current.cards.append(l[indice-1])
     print(game.current.hand)
     indice = int(input("Contre quelle carte?"))
-    game.discard_card(game.current.cards[indice-1],game.current)
-    game.current.deck.cards = game.current.deck.cards.append(l[indice-1])
+    card_removed = game.current.cards.pop(indice-1)
+    game.current.deck.cards.append(card_removed)
+
+@decorate_type
+@decorate_play
+def play22(game):
+    """Kebab: Place une carte salade dans le deck de chaque joueur"""
+    game.current.deck.cards.append(card3)
+    game.other.deck.cards.append(card3)
+
+@decorate_play
+def play23(game):
+    """Pipi, les dents et au lit: Votre adversaire ne peut jouer qu'une carte au prochain tour"""
+    game.other.allowed_to_play[1] = 1
+
+@decorate_play
+def play24(game):
+    """Double date: Vous choisissez deux cartes neutres restantes"""
+    print("Voici les cartes neutres qui restent")
+    print(game.rest_neutre)
+    indice = int(input("Quelle carte voulez-vous?"))
+    game.current.cards.append(game.rest_neutre.cards.pop(indice-1))
+    indice = int(input("Et?"))
+    game.current.cards.append(game.rest_neutre.cards.pop(indice-1))
+
+@decorate_play
+def play25(game):
+    """Jeu de rôle: Au début du prochain tour adverse, vous piochez à sa place (dans son deck)"""
+    game.other.draw_instead = True
 
 
 
@@ -224,15 +251,23 @@ card18 = Card(CLAROU, play18, "Rire mignon: l'adversaire se défausse d'une cart
 card19 = Card(HADRI, play19, "Posé: Votre adversaire ne peut pas jouer plus de deux cartes au prochain tour", 0, type = [BEAUF])
 card20 = Card(CLAROU, play6, "(Argument) Journée de la femme: J'y peux rien c'est aujourd'hui",1)
 card21 = Card(CLAROU, play21, "Courageuse?: Vous échangez une carte de votre main avec une carte au choix parmi les trois premières de votre deck",0)
-#card21 = Card(CLAROU, play21, "Courageuse?: Vous échangez une carte de votre main avec une carte au choix parmi les trois premières de votre deck",0)
+card22 = Card(NEUTRE, play22, "Kebab: Place une carte salade dans le deck de chaque joueur", 0, type=[BEAUF, BOUFFE])
+card23 = Card(HADRI, play23, "Pipi, les dents et au lit: Votre adversaire ne peut jouer qu'une carte au prochain tour", 0)
+card24 = Card(NEUTRE, play24, "Double date: Vous choisissez deux cartes neutres restantes", 0, type=[AMOUR])
+card25 = Card(NEUTRE, play25, "Jeu de rôle: Au début du prochain tour adverse, vous piochez à sa place (dans son deck)", 0)
 
 
-l1 = [card21,card21,card21,card21,card21,card18,card18,card18,card9,card10,card14]
+l1 = [card25,card25,card25,card25,card21,card18,card18,card18,card9,card10,card14]
 l2 = [card12,card12,card12,card12,card5,card6,card7,card8,card9,card10,card14]
+rest = [card2,card2,card5,card5,card5,card13,card7,card8,card9,card10,card22]
+rest_neutre = [card for card in rest if card.color == NEUTRE]
+
 
 """Création des deux decks de départ"""
 
 deck1 = Deck(l1)
 deck2 = Deck(l2)
+rest_neutre = Deck(rest_neutre)
+
 deck1.shuffle()
 deck2.shuffle()

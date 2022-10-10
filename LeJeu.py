@@ -7,6 +7,7 @@
 from re import L
 from random import shuffle
 
+
 HADRI = 1
 CLAROU = 2
 NEUTRE = 3
@@ -94,15 +95,16 @@ class Hand:
 
 class Game:
     """ Un jeu de LeJeu."""
-
+    
     def __init__(self):
         players = ["Hadri", "Clarou"]
 
         """ Définition des decks """
-
-        from deck import deck1, deck2
+        from deck import deck1, deck2, rest_neutre
         self.current = Player(players[0],deck1)
         self.other = Player(players[1], deck2)
+        # Spécifique aux cartes permettants de choisir dans les cartes restantes
+        self.rest_neutre = rest_neutre
         self.discard = []
 
     def discard_card(self, card, player):
@@ -123,7 +125,12 @@ class Game:
         #Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
         if self.current.allowed_to_play[0]:
             try:
-                self.current.cards.append(self.current.deck.draw())
+                #Si jeu  de rôle a été jouée (num 25) l'adversaire pioche à votre place
+                if not self.current.draw_instead:
+                    self.current.cards.append(self.current.deck.draw())
+                else:
+                    self.other.cards.append(self.current.deck.draw())
+                    self.current.draw_instead = False
             except IndexError:
                 pass  # deck vide
             
@@ -165,7 +172,10 @@ class Player:
         self.name = name
         self.deck = deck
         self.hand = Hand(deck)
+        #Spécifique à Jeu de rôle (num 25): pioche à la place de l'autre à son prochain tour
+        self.draw_instead = False
         #Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
+        #Et aux cartes qui impose de ne pas jouer plus de x cartes (ex: Posé num 19)
         self.allowed_to_play = [True, NB_OF_CARD_IN_DECK]
         #Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16) 
         # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées 
@@ -188,6 +198,7 @@ class Player:
 
 
 if __name__ == "__main__":
+
     pass
         
 
