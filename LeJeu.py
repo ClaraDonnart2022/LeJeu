@@ -42,6 +42,9 @@ class Deck:
     def __str__(self):
         return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
 
+    def append(self,card):
+        self.cards.append(card)
+
     #TODO: créer un draw_type(self,type= None) qui combine draw draw_argument et draw_action
     def draw(self):
         return(self.cards.pop(-1))
@@ -104,19 +107,34 @@ class Game:
         self.other = Player(players[1], deck2)
         # Spécifique aux cartes permettants de choisir dans les cartes restantes
         self.rest = rest
-        self.discard = []
+        self.discard = Deck([])
 
     def discard_card(self, card, player):
         self.discard.append(card)
         player.hand.cards.remove(card)
 
-    def view_n_fist_cards_of_deck(self, n):
-        print(f"Voici les {n} premières cartes de votre deck: ")
+    def view_n_fist_cards_of_deck(self, NB_OF_CARDS, player):
+        print(f"Voici les {NB_OF_CARDS} premières cartes du deck de {player}: ")
         l = []
-        for k in range(n):
-            l.append(self.current.deck.draw())
-            print(k+1,". ", l[k], '\n')
+        for k in range(NB_OF_CARDS):
+            try:
+                l.append(player.deck.draw())
+                print(f"{k+1}. {l[k]} \n") 
+            except IndexError:
+                break
         return(l)
+        
+        
+
+    def reorganise_n_deck(self, NB_OF_CARDS, player):
+        first_cards = self.view_n_fist_cards_of_deck(NB_OF_CARDS, player)
+        reorganised = []
+        for k in range(NB_OF_CARDS):
+            indice = int(input("Quelle carte voulez vous mettre en premier?"))
+            card_chosen = first_cards.pop(indice-1)
+            reorganised.append(card_chosen)
+            print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(first_cards)))
+        player.deck.cards = player.deck.cards + reorganised
     
     def choose_in_deck(self, NB_OF_CARDS,deck, color=None, type=None):
         """Fonction qui prend en argument le type (BOUFFE, AMOUR etc...) ou la couleur (HADRI, CLAROU, NEUTRE) 
@@ -186,7 +204,7 @@ class Game:
                         else:
                             print("Vous avez joué trop d'arguments")
                     except ValueError as e:
-                        print("Ce n'es pas un numéro")
+                        print("Ce n'est pas un numéro")
                     except IndexError as e:
                         print("Un numéro que tu as plutôt")
 

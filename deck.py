@@ -137,11 +137,8 @@ def play11(game):
 @decorate_play
 def play12(game):
     """Bien équipé: Réorganise les trois premières cartes de votre deck"""
-    l = game.view_n_fist_cards_of_deck(3)
-    indice1 = int(input("Quelle carte voulez vous piocher un premier?"))
-    indice2 = int(input("En deuxième?"))
-    indice3 = int(input("En dernier?"))
-    game.current.deck.cards = game.current.deck.cards + [l[indice3-1], l[indice2-1], l[indice1-1]]
+    NB_OF_CARDS = 3
+    game.reorganise_n_deck(NB_OF_CARDS, game.current)
         
 @decorate_play
 def play13(game):
@@ -188,7 +185,7 @@ def play19(game):
 @decorate_play
 def play21(game):
     """Courageuse?: Vous échangez une carte de votre main avec une carte au choix parmi les trois premières de votre deck"""
-    l = game.view_n_fist_cards_of_deck(3)
+    l = game.view_n_fist_cards_of_deck(3, game.current)
     indice = int(input("Quelle carte voulez vous prendre?"))
     game.current.cards.append(l[indice-1])
     print(game.current.hand)
@@ -265,6 +262,7 @@ def play28(game):
     except TypeError:
         pass
 
+@decorate_play
 def play29(game):
     """Surprise: Vous prenez une carte aléatoire dans la main de votre adversaire"""
     try:
@@ -273,6 +271,7 @@ def play29(game):
     except IndexError or TypeError:
         print("L'adversaire n'a plus de carte")
 
+@decorate_play
 def play30(game):
     """Kiffeuse: Vous choisissez une carte parmi les trois premières du deck adverse"""
     NB_OF_CARD_CHOSEN = 1
@@ -282,22 +281,58 @@ def play30(game):
     # On met les cartes choisies dans la main du joueur 
     cards_deck_to_deck(cards, game.current.hand, game.other.deck)
 
+@decorate_play
 def play31(game):
     """Matin difficile: Au début de son prochain tour le joueur adverse ne pioche pas."""
     game.other.allowed_to_play[2] = False
 
+@decorate_play
 def play33(game):
     """10h du mat on est déjà à fond: Vous piochez des cartes Picole: jusqu'à avoir autant de cartes que votre adversaire"""
     for k in range(len(game.other.cards)):
         card = game.current.deck.draw_type(istype= PICOLE)
         if card != None:
             game.current.cards.append(card)
+        else:
+            break
+
+@decorate_play
+def play34(game):
+    """Petite bière: Vous choisissez une carte Picole de votre deck"""
+    NB_OF_CARDS = 1
+    cards = game.choose_in_deck(NB_OF_CARDS, game.current.deck, type=PICOLE)
+    cards_deck_to_deck(cards, game.current.hand, game.current.deck)
+
+@decorate_play
+def play35(game):
+    """J'ai tous les droits: Vous choisissez une carte de la défausse"""
+    NB_OF_CARDS = 1
+    cards = game.choose_in_deck(NB_OF_CARDS, game.discard, type=PICOLE)
+    cards_deck_to_deck(cards, game.current.hand, game.discard)
+
+@decorate_play
+def play37(game):
+    """Surchargé: Vous piochez deux cartes"""
+    NB_OF_CARDS = 2
+    for k in range(NB_OF_CARDS):
+        card = game.current.deck.draw()
+        game.current.hand.cards.append(card)
+
+@decorate_play
+def play38(game):
+    """Buée: Vous réorganisez les 3 premières cartes du deck adverse"""
+    NB_OF_CARDS = 3
+    game.reorganise_n_deck(NB_OF_CARDS, game.other)
 
 def cards_deck_to_deck(cards, deck_recieve,deck_send):
     """Passe une liste de carte du deck_send au deck_recieve: prend en argument la liste le deck1 et le deck2"""
-    for card in cards:
-        deck_recieve.cards.append(card)
-        deck_send.cards.remove(card)
+    try:
+        for card in cards:
+            deck_recieve.cards.append(card)
+            deck_send.cards.remove(card)
+    except TypeError:
+        pass
+
 
 
 
@@ -308,8 +343,8 @@ card2 = Card(NEUTRE, play2, "Faux Travail: Vous choisissez une carte dans la mai
 card3 = Card(NEUTRE,play3,"Salade: Ne sert à rien",0,type=[BOUFFE])
 card4 = Card(HADRI, play4, "Kiffeur: Vous choisissez une carte dans la main de votre adversaire",0)
 card5 = Card(NEUTRE, play5, "Pinte de Spritz: L'adversaire se défausse d'un argument",0)
-card6 = Card(HADRI, play6, "Jam: Je dois aider pour installer en plus",1)
-card7 = Card(HADRI, play6, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,discardable=False)
+card6 = Card(HADRI, play6, "(Argument) Jam: Je dois aider pour installer en plus",1)
+card7 = Card(HADRI, play6, "(Argument) Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,discardable=False)
 card8 = Card(HADRI, play8, "Pari stupide: cet argument est pour votre adversaire. Vous piochez 3 cartes",0)
 card9 = Card(HADRI, play9, "Gros Canon: Si vous n'avez pas d'argument en main, en joue un depuis votre deck",0)
 card10 = Card(HADRI, play10, "Jeune investisseur: Vous piochez deux actions",0)
@@ -317,7 +352,7 @@ card11 = Card(HADRI, play11, "Courageux: Echangez toutes vos cartes avec des car
 card12 = Card(HADRI, play12, "Bien équipé: Vous réorganisez les trois premières cartes de votre deck",0)
 card13 = Card(NEUTRE, play13, "Baillement: Vous défausser une carte. Votre adversaire en défausse deux",0)
 card14 = Card(HADRI, play14, "Roi de la Bouffe: Cette action reste en jeu. Jouez 3 cartes Bouffe pour la transformer en Argument",0,type=[BOUFFE])
-card15 = Card(CLAROU, play6, "Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,type=[BEAUF],discardable=False)
+card15 = Card(CLAROU, play6, "(Argument) Style incontestable: Une fois cet argument joué il ne peut être défaussé",1,type=[BEAUF],discardable=False)
 card16 = Card(CLAROU, play16, "Princesse des coeurs: Cette action reste en jeu. Jouez 3 cartes Amour pour la transformeren Argument.",0, type = [AMOUR])
 card17 = Card(CLAROU, play17, "Sieste inopinée: L'adversaire passe son prochain tour",0)
 card18 = Card(CLAROU, play18, "Rire mignon: l'adversaire se défausse d'une carte aléatoire",0)
@@ -336,9 +371,14 @@ card30 = Card(CLAROU, play30, "Kiffeuse: Vous choisissez une carte parmi les tro
 card31 = Card(NEUTRE, play31, "Matin difficile: Au début de son prochain tour le joueur adverse ne pioche pas.",0, type=[PICOLE])
 card32 = Card(NEUTRE, play5, "Black-out:L'adversaire perd son dernier argument",0, type=[PICOLE])
 card33 = Card(NEUTRE, play33, "10h du mat on est déjà à fond: Vous piochez des cartes Picole: jusqu'à avoir autant de cartes que votre adversaire", 0, type=[PICOLE, BEAUF])
+card34 = Card(NEUTRE, play34, "Petite bière: Vous choisissez une carte Picole de votre deck", 0, type=[PICOLE])
+card35 = Card(CLAROU, play35, "J'ai tous les droits: Vous choisissez une carte de la défausse.", 0)
+card36 = Card(NEUTRE, play6, "Lessive: En plus je suis descendu deux fois pour le sèche-linge", 1)
+card37 = Card(NEUTRE, play37, "Surchargé: Vous piochez deux cartes", 0)
+card38 = Card(CLAROU, play38, "Buée: Vous réorganisez les 3 premières cartes du deck adverse", 0)
 
-l1 = [card31,card31,card31,card31,card33,card33,card33,card33,card33,card10,card14]
-l2 = [card9,card10,card10,card9,card9,card9,card7,card8,card9,card10,card14]
+l1 = [card38,card38,card38,card38,card38,card37,card33,card33,card33,card10,card14]
+l2 = [card12,card12,card12,card12,card9,card9,card7,card8,card9,card10,card14]
 rest = [card2,card2,card5,card5,card5,card13,card7,card8,card9,card10,card22]
 
 
