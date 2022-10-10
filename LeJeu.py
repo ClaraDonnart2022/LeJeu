@@ -14,6 +14,7 @@ AMOUR = 10
 BOUFFE = 11
 PICOLE = 12
 BEAUF = 13
+NB_OF_CARD_IN_DECK = 20
 
 
 class Card:
@@ -108,11 +109,19 @@ class Game:
         self.discard.append(card)
         player.hand.cards.remove(card)
 
+    def view_n_fist_cards_of_deck(self, n):
+        print(f"Voici les {n} premières cartes de votre deck: ")
+        l = []
+        for k in range(n):
+            l.append(self.current.deck.draw())
+            print(k+1,". ", l[k], '\n')
+        return(l)
+
     def turn(self):
          #TODO: gérer mettre un numéro à la place de j 
         self.arg_played = 0
         #Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
-        if self.current.allowed_to_play:
+        if self.current.allowed_to_play[0]:
             try:
                 self.current.cards.append(self.current.deck.draw())
             except IndexError:
@@ -120,14 +129,16 @@ class Game:
             
             print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
             rep = "j"
-            while (rep == "j" or rep == "") and len(self.current.cards)!=0:
+            #Spécifique aux cartes qui empêchent de jouer plus de x cartes (Posé num 19)
+            count_of_card_played = 0
+            while (rep == "j" or rep == "") and len(self.current.cards)!=0 and count_of_card_played < self.current.allowed_to_play[1]:
                 print(self.current.hand)
                 rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
                 if rep == "j":
                     try :
                         numcardplay = int(input("Laquelle?"))
                         self.card_played = self.current.cards[numcardplay-1]
-
+                        count_of_card_played +=1
                         #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
                         if(self.arg_played<1 or self.card_played.arg == False):
                             self.discard_card(self.card_played, self.current)
@@ -141,8 +152,10 @@ class Game:
 
                 print(f"Vous avez {len(self.current.ingame_arg)} argument(s)")
         else:
-            self.current.allowed_to_play = True
+            self.current.allowed_to_play[0] = True
+        self.current.allowed_to_play[1] = NB_OF_CARD_IN_DECK 
         self.current, self.other = self.other, self.current
+        
 
 
 
@@ -153,7 +166,7 @@ class Player:
         self.deck = deck
         self.hand = Hand(deck)
         #Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
-        self.allowed_to_play = True
+        self.allowed_to_play = [True, NB_OF_CARD_IN_DECK]
         #Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16) 
         # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées 
         # Le deuxième argument a pour but de stocker la carte quand elle arrivera
@@ -171,8 +184,7 @@ class Player:
         return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.ingame_arg)])
     
 
-class Interface:
-    """Classe d'interface utilisateur"""
+
 
 
 if __name__ == "__main__":

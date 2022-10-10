@@ -113,7 +113,7 @@ def play9(game):
         try:
             card_drawn = game.current.deck.draw_argument()
             card_drawn.play(game)
-        except IndexError:
+        except AttributeError:
             print("Il n'y plus d'argument dans votre deck cette carte n'a pas d'effet.")
             pass
     else:
@@ -138,12 +138,8 @@ def play11(game):
 
 @decorate_play
 def play12(game):
-    """Réorganise les trois premières cartes de votre deck"""
-    print("Voici les trois premières cartes de votre deck: ")
-    l = []
-    for k in range(3):
-        l.append(game.current.deck.draw())
-        print(k+1,". ", l[k], '\n')
+    """Bien équipé: Réorganise les trois premières cartes de votre deck"""
+    l = game.view_n_fist_cards_of_deck(3)
     indice1 = int(input("Quelle carte voulez vous piocher un premier?"))
     indice2 = int(input("En deuxième?"))
     indice3 = int(input("En dernier?"))
@@ -177,7 +173,7 @@ def play16(game):
 @decorate_play
 def play17(game):
     """Sieste inopinée: l'adversaire passe son prochain tour"""
-    game.other.allowed_to_play = False
+    game.other.allowed_to_play[0] = False
 
 @decorate_play
 def play18(game):
@@ -185,6 +181,22 @@ def play18(game):
     #Choisit une carte alétoire du deck de l'adversaire
     card = choice(game.other.cards)
     game.discard_card(card,game.other)
+
+@decorate_play
+def play19(game):
+    """Posé: Votre adversaire ne peut pas jouer plus de deux cartes au prochain tour."""
+    game.other.allowed_to_play[1] = 2
+
+@decorate_play
+def play21(game):
+    """Courageuse?: Vous échangez une carte de votre main avec une carte au choix parmi les trois premières de votre deck"""
+    l = game.view_n_fist_cards_of_deck(3)
+    indice = int(input("Quelle carte voulez vous prendre?"))
+    game.current.cards.append(l[indice-1])
+    print(game.current.hand)
+    indice = int(input("Contre quelle carte?"))
+    game.discard_card(game.current.cards[indice-1],game.current)
+    game.current.deck.cards = game.current.deck.cards.append(l[indice-1])
 
 
 
@@ -209,9 +221,14 @@ card15 = Card(CLAROU, play6, "Style incontestable: Une fois cet argument joué i
 card16 = Card(CLAROU, play16, "Princesse des coeurs: Cette action reste en jeu. Jouez 3 cartes Amour pour la transformeren Argument.",0, type = [AMOUR])
 card17 = Card(CLAROU, play17, "Sieste inopinée: L'adversaire passe son prochain tour",0)
 card18 = Card(CLAROU, play18, "Rire mignon: l'adversaire se défausse d'une carte aléatoire",0)
+card19 = Card(HADRI, play19, "Posé: Votre adversaire ne peut pas jouer plus de deux cartes au prochain tour", 0, type = [BEAUF])
+card20 = Card(CLAROU, play6, "(Argument) Journée de la femme: J'y peux rien c'est aujourd'hui",1)
+card21 = Card(CLAROU, play21, "Courageuse?: Vous échangez une carte de votre main avec une carte au choix parmi les trois premières de votre deck",0)
+#card21 = Card(CLAROU, play21, "Courageuse?: Vous échangez une carte de votre main avec une carte au choix parmi les trois premières de votre deck",0)
 
-l1 = [card17,card17,card17,card17,card18,card18,card18,card18,card9,card10,card14]
-l2 = [card1,card2,card3,card4,card5,card6,card7,card8,card9,card10,card14]
+
+l1 = [card21,card21,card21,card21,card21,card18,card18,card18,card9,card10,card14]
+l2 = [card12,card12,card12,card12,card5,card6,card7,card8,card9,card10,card14]
 
 """Création des deux decks de départ"""
 
