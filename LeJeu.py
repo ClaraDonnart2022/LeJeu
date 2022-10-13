@@ -110,10 +110,14 @@ class Game:
         self.discard = Deck([])
 
     def discard_card(self, card, player):
+        """Permet de défausser une carte à partir d'une main de joueur 
+        prend en argument une carte et un joueur
+        ne retourne rien"""
         self.discard.append(card)
         player.hand.cards.remove(card)
 
     def view_n_fist_cards_of_deck(self, NB_OF_CARDS, player):
+        """Permet de voir les n premières cartes du deck d'un joueur"""
         print(f"Voici les {NB_OF_CARDS} premières cartes du deck de {player}: ")
         l = []
         for k in range(NB_OF_CARDS):
@@ -127,12 +131,17 @@ class Game:
         
 
     def reorganise_n_deck(self, NB_OF_CARDS, player):
+        """Permet de réorganiser les n premières cartes du deck d'un joueur
+        prend en argument le nombre de cartes et le joueur dont le deck va être réorganisée"""
+
         first_cards = self.view_n_fist_cards_of_deck(NB_OF_CARDS, player)
         reorganised = []
+        # Demande à l'utilisateur carte par carte laquelle il voudrait placer en premier dans le deck
         for k in range(NB_OF_CARDS):
             indice = int(input("Quelle carte voulez vous mettre en premier?"))
             card_chosen = first_cards.pop(indice-1)
             reorganised.append(card_chosen)
+            #Affiche à chaque fois les cartes restantes à trier
             print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(first_cards)))
         player.deck.cards = player.deck.cards + reorganised
     
@@ -169,6 +178,7 @@ class Game:
         
 
     def turn(self):
+        """Gère un tour de jeu"""
          #TODO: gérer mettre un numéro à la place de j 
         self.arg_played = 0
         #Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
