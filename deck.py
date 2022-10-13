@@ -40,7 +40,7 @@ def decorate_type(function):
 @decorate_play
 def play1(game):
     """Pirouette: Vous pouvez jouer deux arguments de plus pendant ce tour"""
-    game.arg_played -=2
+    game.current.arg_played -=2
 
 @decorate_play
 def play2(game):
@@ -72,24 +72,14 @@ def play4(game):
 @decorate_play
 def play5(game):
     """Pinte de Spritz: L'adversaire se défausse d'un argument"""
-    l = [c for c in game.other.ingame_arg if c.discardable]
-    L = Deck(l)
-
-    #Si l'adversaire a pas d'argument
-    if len(game.other.ingame_arg)<=0:
-        print("Votre adversaire n'a pas d'arguments votre action est inutile")
-
-    #Si l'adversaire a des arguments défaussables
-    elif len(game.other.ingame_arg)>0 and len(l)!=0:
-        card = choice(L)
-        game.other.ingame_arg.remove(card)
+    game.other.discard_argument()
 
 
 @decorate_play
 @decorate_type
 def play6(game):
     """Un argument"""
-    game.arg_played += 1
+    game.current.arg_played += 1
     game.current.ingame_arg.append(game.card_played)
 
 
@@ -324,14 +314,63 @@ def play38(game):
     NB_OF_CARDS = 3
     game.reorganise_n_deck(NB_OF_CARDS, game.other)
 
+
+@decorate_play
+def play39(game):
+    """Armure: L'adversaire ne peut pas jouer d'argument au prochain tour"""
+    # Le nombre max d'argument joué par tour étant de 1, 
+    # Sachant qu'il existe une carte permettant d'en jouer deux de plus
+    # et que la carte est codée de telle sorte à ce que arg_played -= 2
+    # On le pose = 3>1 pour éviter les soucis liés à la carte 
+    game.other.arg_played = 3
+
+@decorate_play
+def play40(game):
+    """Before arrosé: Tous les joueurs perdent 2 arguments"""
+    NB_OF_ARGUMENTS = 2
+    for k in range(NB_OF_ARGUMENTS):
+        game.current.discard_argument()
+        game.other.discard_argument()
+
+@decorate_play
+def play41(game):
+    """Peinture de guerre: Vous piochez deux cartes Picole"""
+    NB_OF_CARDS = 2
+    for k in range(NB_OF_CARDS):
+        card = game.current.deck.draw_type(istype= PICOLE)
+        game.current.cards.append(card)
+
+@decorate_play
+def play42(game):
+    """Vomi tactique: L'adversaire défausse une carte Bouffe. Vous piochez une carte Picole"""
+    #L'adversaire se défausse d'une carte Bouffe
+    game.discard_type(BOUFFE, game.other)
+    
+    #Tire une carte Picole
+    card = game.current.deck.draw_type(istype=PICOLE)
+    game.current.cards.append(card)
+
+@decorate_play
+def play43(game):
+    """Gala: l'adversaire défausse une carte Beauf, vous piochez une carte Amour"""
+    #L'adversaire se défausse d'une carte BEAUF
+    game.discard_type(BEAUF, game.other)
+    
+    #Tire une carte AMOUR
+    card = game.current.deck.draw_type(istype=AMOUR)
+    game.current.cards.append(card)
+
+
 def cards_deck_to_deck(cards, deck_recieve,deck_send):
-    """Passe une liste de carte du deck_send au deck_recieve: prend en argument la liste le deck1 et le deck2"""
+    """Passe une liste de carte du deck_send au deck_recieve: 
+    prend en argument la liste le deck1 et le deck2"""
     try:
         for card in cards:
             deck_recieve.cards.append(card)
             deck_send.cards.remove(card)
     except TypeError:
         pass
+
 
 
 
@@ -376,9 +415,14 @@ card35 = Card(CLAROU, play35, "J'ai tous les droits: Vous choisissez une carte d
 card36 = Card(NEUTRE, play6, "Lessive: En plus je suis descendu deux fois pour le sèche-linge", 1)
 card37 = Card(NEUTRE, play37, "Surchargé: Vous piochez deux cartes", 0)
 card38 = Card(CLAROU, play38, "Buée: Vous réorganisez les 3 premières cartes du deck adverse", 0)
+card39 = Card(CLAROU, play39, "Armure: L'adversaire ne peut pas jouer d'argument au prochain tour", 0)
+card40 = Card(NEUTRE, play40, "Before arrose: Tous les joueurs perdent 2 arguments", 0, type=[PICOLE])
+card41 = Card(CLAROU, play41, "Peinture de guerre: Vous piochez deux cartes Picole", 0, type=[BEAUF])
+card42 = Card(NEUTRE, play42, "Vomi tactique: L'adversaire défausse une carte Bouffe. Vous piochez une carte Picole", 0, type=[PICOLE])
+card43 = Card(NEUTRE, play43, "Gala: L'adversaire défausse une carte Beauf, vous piochez une carte Amour", 0, type=[AMOUR])
 
-l1 = [card38,card38,card38,card38,card38,card37,card33,card33,card33,card10,card14]
-l2 = [card12,card12,card12,card12,card9,card9,card7,card8,card9,card10,card14]
+l1 = [card43,card43,card43,card43,card24,card24,card24,card40,card40,card40,card40]
+l2 = [card41,card41,card41,card41,card3,card9,card7,card8,card9,card10,card14]
 rest = [card2,card2,card5,card5,card5,card13,card7,card8,card9,card10,card22]
 
 
