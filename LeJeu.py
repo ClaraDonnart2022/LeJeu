@@ -207,26 +207,26 @@ class Game:
                 pass  # deck vide
             
             print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
-            rep = "j"
+            self.rep = "j"
             #Spécifique aux cartes qui empêchent de jouer plus de x cartes (Posé num 19)
-            count_of_card_played = 0
+            self.count_of_card_played = 0
             #Si le joueur réponnd j, qu'il lui reste des cartes et qu'il a "le droit" 
             # de jouer (vis à vis une potentielle carte limitante)
-            while (rep == "j" or rep == "") and len(self.current.cards)!=0 and count_of_card_played < self.current.allowed_to_play[1]:
+            while (self.rep == "j" or self.rep == "") and len(self.current.cards)!=0 and self.count_of_card_played < self.current.allowed_to_play[1]:
                 #Affiche la main
                 print(self.current.hand)
-                rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
+                self.rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
                 #Si il veut jouer une carte
-                if rep == "j":
+                if self.rep == "j":
                     try :
                         numcardplay = int(input("Laquelle?"))
                         self.card_played = self.current.cards[numcardplay-1]
-                        count_of_card_played +=1
                         #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
                         if(self.current.arg_played<1 or self.card_played.arg == False):
                             #On défausse la carte et on joue son effet 
                             self.discard_card(self.card_played, self.current)
                             self.card_played.play(self)
+                            self.count_of_card_played +=1
                         else:
                             #Le jeu ne permet que de jouer 1 argument par tour (sauf carte contraire)
                             print("Vous avez joué trop d'arguments")

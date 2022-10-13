@@ -351,6 +351,7 @@ def play42(game):
     game.current.cards.append(card)
 
 @decorate_play
+@decorate_type
 def play43(game):
     """Gala: l'adversaire défausse une carte Beauf, vous piochez une carte Amour"""
     #L'adversaire se défausse d'une carte BEAUF
@@ -359,6 +360,23 @@ def play43(game):
     #Tire une carte AMOUR
     card = game.current.deck.draw_type(istype=AMOUR)
     game.current.cards.append(card)
+
+@decorate_play
+def play44(game):
+    """Coup de fil: Vous ne pouvez jouer que cette carte pendant ce tour. 
+    Vous piochez trois cartes"""
+    NB_OF_CARDS = 3
+    #On vérifie qu'aucune autre carte n'a été jouée avant
+    if game.count_of_card_played <1:
+        for k in range(NB_OF_CARDS):
+            try:
+                game.current.cards.append(game.current.deck.draw())
+            except IndexError:
+                pass  # deck vide
+        game.rep = "p"
+    else:
+        print("Vous avez essayé de tricher ce n'est pas très joli")
+    
 
 
 def cards_deck_to_deck(cards, deck_recieve,deck_send):
@@ -420,8 +438,9 @@ card40 = Card(NEUTRE, play40, "Before arrose: Tous les joueurs perdent 2 argumen
 card41 = Card(CLAROU, play41, "Peinture de guerre: Vous piochez deux cartes Picole", 0, type=[BEAUF])
 card42 = Card(NEUTRE, play42, "Vomi tactique: L'adversaire défausse une carte Bouffe. Vous piochez une carte Picole", 0, type=[PICOLE])
 card43 = Card(NEUTRE, play43, "Gala: L'adversaire défausse une carte Beauf, vous piochez une carte Amour", 0, type=[AMOUR])
+card44 = Card(NEUTRE, play44, "Coup de fil: Vous ne pouvez jouer que cette carte pendant ce tour. Vous piochez trois cartes", 0, type=[AMOUR])
 
-l1 = [card43,card43,card43,card43,card24,card24,card24,card40,card40,card40,card40]
+l1 = [card44,card44,card44,card44,card44,card24,card24,card40,card40,card40,card40]
 l2 = [card41,card41,card41,card41,card3,card9,card7,card8,card9,card10,card14]
 rest = [card2,card2,card5,card5,card5,card13,card7,card8,card9,card10,card22]
 
