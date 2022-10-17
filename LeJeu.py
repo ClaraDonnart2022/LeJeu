@@ -4,6 +4,7 @@
 3: Neutre
 """
 
+from argparse import ArgumentTypeError
 from re import L
 from random import shuffle
 from random import choice
@@ -22,7 +23,9 @@ NB_OF_CARD_IN_DECK = 20
 class Card:
     """une carte"""
 
-    def __init__(self, color, play, description:str, argum:bool, type=[],discardable=True) -> None:
+    def __init__(
+        self, color, play, description: str, argum: bool, type=[], discardable=True
+    ) -> None:
         self.color = color
         self.play = play
         self.description = description
@@ -31,89 +34,108 @@ class Card:
         self.discardable = discardable
 
     def __str__(self):
-        return(self.description)
+        return self.description
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (
+                self.color == other.color
+                and self.description == other.description
+                and self.arg == other.arg
+            )
+        else:
+            return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Deck:
     """Un deck"""
 
-    def __init__(self, cards:list):
+    def __init__(self, cards: list):
         self.cards = cards
 
     def __str__(self):
-        return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.cards)])
+        return " \n".join(
+            [str(i + 1) + ". " + str(c) for i, c in enumerate(self.cards)]
+        )
 
-    def append(self,card):
+    def append(self, card):
         self.cards.append(card)
 
-    #TODO: créer un draw_type(self,type= None) qui combine draw draw_argument et draw_action
+    # TODO: créer un draw_type(self,type= None) qui combine draw draw_argument et draw_action
     def draw(self):
-        return(self.cards.pop(-1))
+        return self.cards.pop(-1)
 
-    def draw_type(self, isarg= None, istype= None):
+    def draw_type(self, isarg=None, istype=None):
         """isarg = 1: Pioche le premier argument du deck
         isarg = 0: Pioche la première action du deck
         Si isarg = None et istype non None:
         Pioche la prochaine carte du type
         s'il n'y en a plus retourne None"""
-        #TODO: Prend la dernière carte et pas la première a priori
-        
+        # TODO: Prend la dernière carte et pas la première a priori
+
         try:
             c = self.cards[0]
             if isarg is not None and istype is None:
                 A = c.arg == isarg
             elif istype is not None and isarg is None:
                 A = istype in c.type
-            i=0
-            #tant que la carte piochée n'est pas du bon type, on itère
+            i = 0
+            # tant que la carte piochée n'est pas du bon type, on itère
             while not A:
-                i+=1
+                i += 1
                 c = self.cards[i]
                 if isarg is not None:
                     A = c.arg == isarg
                 elif istype is not None:
                     A = istype in c.type
-            return(self.cards.pop(i))
-        except IndexError: 
+            return self.cards.pop(i)
+        except IndexError:
+            print(
+                "Il n'y plus ce type de carte dans votre deck cette carte n'a pas d'effet."
+            )
             return None
-      
+
     def shuffle(self):
         shuffle(self.cards)
 
-    def append(self,c):
+    def append(self, c):
         self.cards.append(c)
 
 
 class Hand:
-
-    def __init__(self,deck,nhand = 3):
+    def __init__(self, deck, nhand=3):
         self.cards = []
         for i in range(nhand):
             try:
                 self.cards.append(deck.draw())
             except IndexError:
                 pass  # deck vide
-            
+
     def __str__(self):
-        return " \n".join(f"{i+1}. {c}" for i,c in enumerate(self.cards))
+        return " \n".join(f"{i+1}. {c}" for i, c in enumerate(self.cards))
 
 
 class Game:
-    """ Un jeu de LeJeu."""
-    
+    """Un jeu de LeJeu."""
+
     def __init__(self):
         players = ["Hadri", "Clarou"]
 
         """ Définition des decks """
-        from deck import deck1, deck2, rest
-        self.current = Player(players[0],deck1)
+        from deck import deck1, deck2, rest, card48
+
+        self.current = Player(players[0], deck1)
         self.other = Player(players[1], deck2)
         # Spécifique aux cartes permettants de choisir dans les cartes restantes
         self.rest = rest
+        self.interrupt = [card48]
         self.discard = Deck([])
 
     def discard_card(self, card, player):
-        """Permet de défausser une carte à partir d'une main de joueur 
+        """Permet de défausser une carte à partir d'une main de joueur
         prend en argument une carte et un joueur
         ne retourne rien"""
         self.discard.append(card)
@@ -122,10 +144,10 @@ class Game:
     def discard_type(self, istype, player):
         """Prend en argument un type de carte et un joueur et défausse
         une carte de ce type dans sa main"""
-        #On vérifie si l'adversaire a une carte istype dans sa main
+        # On vérifie si l'adversaire a une carte istype dans sa main
         l = [card for card in player.cards if istype in card.type]
         if len(l) > 0:
-            #La défausse si oui
+            # La défausse si oui
             card = l.pop()
             self.discard_card(card, player)
         else:
@@ -138,11 +160,11 @@ class Game:
         for k in range(NB_OF_CARDS):
             try:
                 l.append(player.deck.draw())
-                print(f"{k+1}. {l[k]} \n") 
+                print(f"{k+1}. {l[k]} \n")
             except IndexError:
                 break
-        return(l)
-        
+        return l
+
     def reorganise_n_deck(self, NB_OF_CARDS, player):
         """Permet de réorganiser les n premières cartes du deck d'un joueur
         prend en argument le nombre de cartes et le joueur dont le deck va être réorganisée"""
@@ -152,19 +174,19 @@ class Game:
         # Demande à l'utilisateur carte par carte laquelle il voudrait placer en premier dans le deck
         for k in range(NB_OF_CARDS):
             indice = int(input("Quelle carte voulez vous mettre en premier?"))
-            card_chosen = first_cards.pop(indice-1)
+            card_chosen = first_cards.pop(indice - 1)
             reorganised.append(card_chosen)
-            #Affiche à chaque fois les cartes restantes à trier
-            print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(first_cards)))
+            # Affiche à chaque fois les cartes restantes à trier
+            print(" \n".join(f"{i+1}. {c}" for i, c in enumerate(first_cards)))
         player.deck.cards = player.deck.cards + reorganised
-    
-    def choose_in_deck(self, NB_OF_CARDS,deck, color=None, type=None):
-        """Fonction qui prend en argument le type (BOUFFE, AMOUR etc...) ou la couleur (HADRI, CLAROU, NEUTRE) 
+
+    def choose_in_deck(self, NB_OF_CARDS, deck, color=None, type=None):
+        """Fonction qui prend en argument le type (BOUFFE, AMOUR etc...) ou la couleur (HADRI, CLAROU, NEUTRE)
         le deck (ou hand)
         et le nombre de cartes à prendre et permet au joueur de choisir dans les cartes restantes d'un deck
         des cartes spéciales
         Retourne les cartes choisies ou None"""
-        #Crée la liste des cartes concernés dans les cartes restantes
+        # Crée la liste des cartes concernés dans les cartes restantes
         if color is not None and type is None:
             deck_spe = [card for card in deck.cards if card.color == color]
         elif type is not None and color is None:
@@ -172,31 +194,80 @@ class Game:
         elif type is None and color is None:
             deck_spe = deck.cards
 
-        #test s'il reste des cartes du type ou de la couleur choisie
-        if len(deck_spe) >0:
+        # test s'il reste des cartes du type ou de la couleur choisie
+        if len(deck_spe) > 0:
             card_chosen_list = []
             print("Voici les cartes:")
-            #Permet de choisir les cartes voulues dans la liste
-            while len(deck_spe)>0 and len(card_chosen_list) < NB_OF_CARDS:
-                print(" \n".join(f"{i+1}. {c}" for i,c in enumerate(deck_spe)))
+            # Permet de choisir les cartes voulues dans la liste
+            while len(deck_spe) > 0 and len(card_chosen_list) < NB_OF_CARDS:
+                print(" \n".join(f"{i+1}. {c}" for i, c in enumerate(deck_spe)))
                 try:
-                    card_chosen = deck_spe.pop(int(input("Quelle carte voulez-vous?"))-1)
+                    card_chosen = deck_spe.pop(
+                        int(input("Quelle carte voulez-vous?")) - 1
+                    )
                     card_chosen_list.append(card_chosen)
                 except ValueError:
                     pass
-            return(card_chosen_list)
+            return card_chosen_list
         else:
             print("Il n'en reste plus")
-            return(None)
-        
+            return None
+
+    def action_before_turn(self):
+        """Effectue les actions passives de début de tours pour l'instant seulement Déconcentration (num 47)"""
+        # Vérifie si on a utilisé la carte Déconcentration
+        try:
+            # Si cela fait 2 tours que la carte a été jouée
+            if (self.nb_of_turn - self.current.deconcentration) // 2 >= 2:
+                # On remet l'argument actif
+                self.current.ingame_arg = (
+                    self.current.ingame_arg + self.current.inactiv_arg
+                )
+                self.current.inactiv_arg = []
+                self.current.deconcentration = None
+        except (TypeError, AttributeError) as e:
+            pass
+
+    def interruption(self):
+        """Verifie la possibilité d'interruption (possession d'une certaine carte)
+        Demande quelle carte jouer dans ce cas
+        Joue la carte"""
+        from deck import card48
+
+        # On regarde si l'intersection entre l'ens des cartes de la main du joueur adverse
+        # et l'ens des cartes potentiellement utilisées pour interrupt
+        # est non nul
+        interruptable = []
+        for card in self.other.cards:
+            for card_ref in self.interrupt:
+                if card == card_ref:
+                    # Pour l'instant on a que celle-ci qui interrupt
+                    if card == card48 and self.count_of_card_played >= 2:
+                        interruptable.append(card)
+        # Si c'est le cas on demande quelle carte jouer et on la joue
+        if len(interruptable) > 0:
+            print("Voici les cartes jouables:")
+            print(Deck(interruptable))
+            try:
+                numcardplay = int(input("Quelle carte voulez-vous jouer?"))
+                self.card_played = interruptable[numcardplay - 1]
+                # On défausse la carte et on joue son effet
+                self.discard_card(self.card_played, self.other)
+                self.card_played.play(self)
+            except ValueError:
+                print("Ce n'est pas un numéro")
+            except IndexError:
+                print("Un numéro que tu as plutôt")
+
     def turn(self):
         """Gère un tour de jeu"""
-        #TODO: gérer mettre un numéro à la place de j 
-        #Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
+        # TODO: gérer mettre un numéro à la place de j
+        self.action_before_turn()
+        # Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
         if self.current.allowed_to_play[0]:
             try:
-                #Si jeu  de rôle a été jouée (num 25) l'adversaire pioche à votre place
-                #Si Matin difficile a été jouée (num 31), le joueur ne pioche pas
+                # Si jeu  de rôle a été jouée (num 25) l'adversaire pioche à votre place
+                # Si Matin difficile a été jouée (num 31), le joueur ne pioche pas
                 if not self.current.draw_instead and self.current.allowed_to_play[2]:
                     self.current.cards.append(self.current.deck.draw())
                     self.current.allowed_to_play[2] = True
@@ -205,107 +276,137 @@ class Game:
                     self.current.draw_instead = False
             except IndexError:
                 pass  # deck vide
-            
+
             print(f"C'est le tour de {self.current.name}. Voici tes cartes:")
             self.rep = "j"
-            #Spécifique aux cartes qui empêchent de jouer plus de x cartes (Posé num 19)
+            # Spécifique aux cartes qui empêchent de jouer plus de x cartes (Posé num 19)
             self.count_of_card_played = 0
-            #Si le joueur réponnd j, qu'il lui reste des cartes et qu'il a "le droit" 
+            # Si le joueur réponnd j, qu'il lui reste des cartes et qu'il a "le droit"
             # de jouer (vis à vis une potentielle carte limitante)
-            while (self.rep == "j" or self.rep == "") and len(self.current.cards)!=0 and self.count_of_card_played < self.current.allowed_to_play[1]:
-                #Affiche la main
+            while (
+                (self.rep == "j" or self.rep == "" or self.rep == "i")
+                and len(self.current.cards) != 0
+                and self.count_of_card_played < self.current.allowed_to_play[1]
+            ):
+                # Affiche la main
                 print(self.current.hand)
-                self.rep = input("Veux-tu jouer une carte (j) ou passer (p)?")
-                #Si il veut jouer une carte
+                self.rep = input(
+                    f"Voulez-vous jouer une carte (j), passer (p) ou est-ce que {self.other.name} veut intervernir (i)?"
+                )
+                # S'il veut jouer une carte
                 if self.rep == "j":
-                    try :
+                    try:
                         numcardplay = int(input("Laquelle?"))
-                        self.card_played = self.current.cards[numcardplay-1]
-                        #Si le joueur n'a pas encore joué d'argument ou que la carte n'est pas un argument
-                        if(self.current.arg_played<1 or self.card_played.arg == False):
-                            #On défausse la carte et on joue son effet 
+                        self.card_played = self.current.cards[numcardplay - 1]
+                        # Si la carte est jouable
+                        if self.current.playable_card(self.card_played):
+                            # On défausse la carte et on joue son effet
                             self.discard_card(self.card_played, self.current)
                             self.card_played.play(self)
-                            self.count_of_card_played +=1
+                            # Utile pour Réfléchissant (num 46): garde en mémoire la dernière carte jouée
+                            self.current.last_played = self.card_played
+                            self.count_of_card_played += 1
                         else:
-                            #Le jeu ne permet que de jouer 1 argument par tour (sauf carte contraire)
-                            print("Vous avez joué trop d'arguments")
+                            # Le jeu ne permet que de jouer 1 argument par tour (sauf carte contraire)
+                            # ou Si la carte a été interdite
+                            print("Vous ne pouvez pas jouer cette carte")
+
                     except ValueError as e:
                         print("Ce n'est pas un numéro")
                     except IndexError as e:
                         print("Un numéro que tu as plutôt")
 
-                print(f"Vous avez {len(self.current.ingame_arg)} argument(s)")
+                # S'il est interrompu
+                elif self.rep == "i":
+                    self.interruption()
+                print(f"Vous avez {len(self.current.ingame_arg)} argument(s)\n")
+
         else:
             self.current.allowed_to_play[0] = True
         self.current.arg_played = 0
-        self.current.allowed_to_play[1] = NB_OF_CARD_IN_DECK 
+        self.current.allowed_to_play[1] = NB_OF_CARD_IN_DECK
+        self.current.type_of_cards_not_allowed = []
         self.current, self.other = self.other, self.current
-        
-        
-
 
 
 class Player:
-
-    def __init__(self, name:str, deck):
+    def __init__(self, name: str, deck):
         self.name = name
         self.deck = deck
         self.hand = Hand(deck)
-        #Spécifique à Jeu de rôle (num 25): pioche à la place de l'autre à son prochain tour
+        # Spécifique à Jeu de rôle (num 25): pioche à la place de l'autre à son prochain tour
         self.draw_instead = False
-        #1er arg: Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
-        #Et aux cartes qui impose de ne pas jouer plus de x cartes (ex: Posé num 19)
-        #3eme arg: "allowed_to_draw" spécifique à la carte matin difficile (num 31)
+        # 1er arg: Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
+        # Et aux cartes qui impose de ne pas jouer plus de x cartes (ex: Posé num 19)
+        # 3eme arg: "allowed_to_draw" spécifique à la carte matin difficile (num 31)
         self.allowed_to_play = [True, NB_OF_CARD_IN_DECK, True]
-        #Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16) 
-        # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées 
+        # Utile pour Massage (num51)
+        self.type_of_cards_not_allowed = []
+        # Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16)
+        # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées
         # Le deuxième argument a pour but de stocker la carte quand elle arrivera
         # Le troisième argument réfère au type de carte qui l'active
         self.roi_de_la_bouffe = [0, None, BOUFFE]
         self.princesse_des_coeurs = [0, None, AMOUR]
-        #Utile pour les cartes qui demande de discard un argument
+        # Utile pour les cartes qui demande de discard un argument
         self.ingame_arg = []
+        # Utile pour Déconcentration (num 47): argument inactif pendant deux tours
+        self.inactiv_arg = []
         # Utile pour Armure  (num 39) de le mettre comme un élément de Player
         self.arg_played = 0
+        # Utile pour Réfléchissant (nnum46)
+        self.last_played = None
 
-    @property 
+    @property
     def cards(self):
-        return(self.hand.cards)    
+        return self.hand.cards
+
+    def playable_card(self, card):
+        """Test si une carte est jouable pour un joueur à un instant donné -> retourne un booléen"""
+        test1 = self.arg_played < 1 or card.arg == False
+        # Spécifique à la carte Massage (num 51)
+        test2 = True
+        for type1 in card.type:
+            for type2 in self.type_of_cards_not_allowed:
+                if type1 == type2:
+                    test2 = False
+        return test1 and test2
 
     def discard_argument(self):
         """Défausse un argument d'un joueur s'il en a des défaussables"""
         l = [c for c in self.ingame_arg if c.discardable]
         L = Deck(l)
 
-        #Si l'adversaire a pas d'argument
-        if len(self.ingame_arg)<=0:
+        # Si l'adversaire a pas d'argument
+        if len(self.ingame_arg) <= 0:
             print("Il n'y a plus d'argument à défausser votre action est inutile")
 
-        #Si l'adversaire a des arguments défaussables
-        elif len(self.ingame_arg)>0 and len(l)!=0:
+        # Si l'adversaire a des arguments défaussables
+        elif len(self.ingame_arg) > 0 and len(l) != 0:
             print(f"Un argument est défaussé chez {self.name}")
             card = choice(L.cards)
             self.ingame_arg.remove(card)
 
+    def hide_argument(self):
+        """Rend un argument d'un joueur inutile s'il en a"""
+
+        # Si l'adversaire a pas d'argument
+        if len(self.ingame_arg) <= 0:
+            print("Il n'y a plus d'argument votre action est inutile")
+
+        # Si l'adversaire a des arguments
+        else:
+            print(f"Un argument est caché chez {self.name}")
+            card = choice(self.ingame_arg)
+            self.ingame_arg.remove(card)
+            self.inactiv_arg.append(card)
+
     def __str__(self):
-        return " \n".join([str(i+1)+". "+str(c) for i,c in enumerate(self.ingame_arg)])
-    
-
-
+        return " \n".join(
+            [str(i + 1) + ". " + str(c) for i, c in enumerate(self.ingame_arg)]
+        )
 
 
 if __name__ == "__main__":
 
     pass
-        
-
-        
- 
-
-
-
-
-
-
-
