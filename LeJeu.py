@@ -24,7 +24,13 @@ class Card:
     """une carte"""
 
     def __init__(
-        self, color, play, description: str, argum: bool, type=[], discardable=True
+        self,
+        color,
+        play,
+        description: str,
+        argum: bool,
+        type=[],
+        discardable=True,
     ) -> None:
         self.color = color
         self.play = play
@@ -32,6 +38,7 @@ class Card:
         self.arg = argum
         self.type = type
         self.discardable = discardable
+        self.isactiv = True
 
     def __str__(self):
         return self.description
@@ -220,10 +227,8 @@ class Game:
             # Si cela fait 2 tours que la carte a été jouée
             if (self.nb_of_turn - self.current.deconcentration) // 2 >= 2:
                 # On remet l'argument actif
-                self.current.ingame_arg = (
-                    self.current.ingame_arg + self.current.inactiv_arg
-                )
-                self.current.inactiv_arg = []
+                for card in self.current.ingame_arg:
+                    card.isactiv = True
                 self.current.deconcentration = None
         except (TypeError, AttributeError) as e:
             pass
@@ -319,7 +324,7 @@ class Game:
                 # S'il est interrompu
                 elif self.rep == "i":
                     self.interruption()
-                print(f"Vous avez {len(self.current.ingame_arg)} argument(s)\n")
+                print(f"Vous avez {self.current.number_of_arg_activ()} argument(s)\n")
 
         else:
             self.current.allowed_to_play[0] = True
@@ -351,7 +356,7 @@ class Player:
         # Utile pour les cartes qui demande de discard un argument
         self.ingame_arg = []
         # Utile pour Déconcentration (num 47): argument inactif pendant deux tours
-        self.inactiv_arg = []
+        # self.inactiv_arg = []
         # Utile pour Armure  (num 39) de le mettre comme un élément de Player
         self.arg_played = 0
         # Utile pour Réfléchissant (nnum46)
@@ -360,6 +365,11 @@ class Player:
     @property
     def cards(self):
         return self.hand.cards
+
+    def number_of_arg_activ(self):
+        """Retourne le nombre d'arguments actifs d'un joueur"""
+        l = [card for card in self.ingame_arg if card.isactiv]
+        return len(l)
 
     def playable_card(self, card):
         """Test si une carte est jouable pour un joueur à un instant donné -> retourne un booléen"""
@@ -391,15 +401,14 @@ class Player:
         """Rend un argument d'un joueur inutile s'il en a"""
 
         # Si l'adversaire a pas d'argument
-        if len(self.ingame_arg) <= 0:
-            print("Il n'y a plus d'argument votre action est inutile")
+        if self.number_of_arg_activ() <= 0:
+            print("Il n'y a pas d'arguments actifs votre action est inutile")
 
         # Si l'adversaire a des arguments
         else:
             print(f"Un argument est caché chez {self.name}")
             card = choice(self.ingame_arg)
-            self.ingame_arg.remove(card)
-            self.inactiv_arg.append(card)
+            card.isactiv = False
 
     def __str__(self):
         return " \n".join(

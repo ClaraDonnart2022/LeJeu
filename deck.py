@@ -760,11 +760,11 @@ card51 = Card(
     type=[AMOUR],
 )
 l1 = [
-    card51,
-    card51,
-    card51,
-    card51,
-    card51,
+    card47,
+    card47,
+    card47,
+    card47,
+    card47,
     card6,
     card7,
     card8,
