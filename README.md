@@ -1,2 +1,2 @@
 # LeJeu
- Code du jeu inventé par Hadrien Nauroy
+ En cours : Code du jeu inventé par Hadrien Nauroy
