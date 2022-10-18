@@ -25,4 +25,4 @@ Ensuite chaque tour de joueur est composé de la façon suivante:
 
 La partie se termine des qu'un joueur ne peut plus piocher
 
-EN Cas d'égalité la vaisselle est reportée au lendemain et une deuxième partie s'impose.
+En Cas d'égalité la vaisselle est reportée au lendemain et une deuxième partie s'impose.
