@@ -2,6 +2,7 @@
 
 from enum import Enum, unique
 from types import NoneType
+
 from LeJeu import *
 from time import sleep
 from random import *
@@ -437,13 +438,19 @@ def play46(game):
 def play47(game):
     # TODO: gérer s'il y en a plusieurs
     """Déconcentration: Retournez un argument adverse, il est invalide pendant deux tours"""
-    game.other.deconcentration = game.nb_of_turn
-    game.other.hide_argument()
+    card = game.other.hide_argument(game)
+    if card != None:
+        game.other.deconcentration = game.other.deconcentration + [
+            [game.nb_of_turn, card]
+        ]
+
+    else:
+        pass
 
 
 @decorate_play
 def play48(game):
-    """(interrupt) Impatience: Si votre adversaire a déjà joué 2 cartes pendant son tour vous pouvez y mettre fin"""
+    """(interrupt av) Impatience: Si votre adversaire a déjà joué 2 cartes pendant son tour vous pouvez y mettre fin"""
     game.rep = "p"
 
 
@@ -472,6 +479,50 @@ def play50(game):
 def play51(game):
     """L'adversaire ne peut pas jouer de cartes Beauf au prochain tour"""
     game.other.type_of_cards_not_allowed.append(BEAUF)
+
+
+@decorate_play
+def play59(game):
+    """Le verre de trop: Le joueur qui a le plus d'arguments en perd un"""
+    if len(game.current.cards) > len(game.other.cards):
+        game.current.discard_argument()
+    elif len(game.current.cards) < len(game.other.cards):
+        game.other.discard_argument()
+    else:
+        print("Vous avez le même nombre d'arguments: cette carte n'a pas d'effet")
+
+
+@decorate_play
+def play61(game):
+    """(Argument) Equilibriste: cet argument n'est valide que si vous avez plus d'arguments que votre adversaire"""
+
+    if len(game.current.ingame_arg) < len(game.other.ingame_arg):
+        game.card_played.isactiv = False
+    play6(game)
+
+
+@decorate_play
+def play62(game):
+    """L'adversaire ne peut pas jouer de cartes Amour au prochain tour"""
+    game.other.type_of_cards_not_allowed.append(AMOUR)
+
+
+@decorate_play
+def play63(game):
+    """L'adversaire ne peut pas jouer d'action au prochain tour"""
+    game.other.type_of_cards_not_allowed.append(ACTION)
+
+
+@decorate_play
+def play64(game):
+    """(interrupt apr) Fuck: Peut-être joué n'importe quand pour empêcher l'action du joueur adverse"""
+    game.current.cards_not_allowed.append(game.card_played)
+
+
+@decorate_play
+def play65(game):
+    """(Argument) Je l'ai fait hier: Quand cet argument est défaussé, il revient dans votre deck"""
+    game.current.cards_not_allowed.append(game.card_played)
 
 
 def cards_deck_to_deck(cards, deck_recieve, deck_send):
@@ -742,7 +793,7 @@ card47 = Card(
 card48 = Card(
     HADRI,
     play48,
-    "(interrupt) Impatience: Si votre adversaire a déjà joué 2 cartes pendant son tour vous pouvez y mettre fin",
+    "(interrupt av) Impatience: Si votre adversaire a déjà joué 2 cartes pendant son tour vous pouvez y mettre fin",
     0,
 )
 card49 = Card(
@@ -759,13 +810,92 @@ card51 = Card(
     0,
     type=[AMOUR],
 )
+card52 = Card(
+    NEUTRE,
+    play6,
+    "(Argument) Super date: On a bien mangé bien bu en plus",
+    1,
+    [BOUFFE, PICOLE],
+)
+card53 = Card(CLAROU, play6, "(Argument) Fromage qui pue: ça colle partout en plus", 1)
+card54 = Card(CLAROU, play6, "(Argument) Oui mais j'ai un joli petit cul", 1)
+card55 = Card(
+    CLAROU,
+    play6,
+    "(Argument) Soirée entre filles: C'est hyper rare en plus",
+    1,
+    type=[PICOLE],
+)
+card56 = Card(
+    CLAROU,
+    play6,
+    "(Argument) Je télécharge le film: il est super en plus",
+    1,
+    type=[AMOUR],
+)
+card57 = Card(
+    HADRI,
+    play6,
+    "(Argument) Oui mais j'ai des abdos saillants: Y'a le V en plus",
+    1,
+    type=[BEAUF],
+)
+card58 = Card(
+    HADRI,
+    play6,
+    "(Argument) Oui mais je t'ai préparé le petit dej au lit: Y'avait même des croissants",
+    1,
+)
+card59 = Card(
+    NEUTRE,
+    play59,
+    "Le verre de trop: le joueur qui a le plus d'arguments en perd un",
+    0,
+    type=[PICOLE],
+)
+card60 = Card(
+    CLAROU,
+    play47,
+    "Déconcentration: Retournez un argument adverse il est invalide pendant 2 tours",
+    0,
+)
+card61 = Card(
+    NEUTRE,
+    play6,
+    "(Argument) Equilibriste: cet argument n'est valide que si vous avez plus d'arguments que votre adversaire",
+    1,
+)
+card62 = Card(
+    NEUTRE,
+    play62,
+    "Les potes avant les p****: l'adversaire ne peut pas jouer de carte amour au prochain tour",
+    0,
+)
+card63 = Card(
+    NEUTRE,
+    play63,
+    "Silence radio: l'adversaire ne peut pas jouer d'action au prochain tour",
+    0,
+)
+card64 = Card(
+    NEUTRE,
+    play64,
+    "(interrupt apr) Fuck: Peut-être joué n'importe quand pour empêcher l'action du joueur adverse",
+    0,
+)
+card65 = Card(
+    NEUTRE,
+    play65,
+    "(Argument) Je l'ai fait hier: Quand cet argument est défaussé il revient dans votre deck",
+    0,
+)
 l1 = [
-    card47,
-    card47,
-    card47,
-    card47,
-    card47,
-    card6,
+    card65,
+    card65,
+    card65,
+    card65,
+    card65,
+    card64,
     card7,
     card8,
     card9,
@@ -776,16 +906,16 @@ l1 = [
 ]
 
 l2 = [
-    card15,
-    card15,
-    card15,
-    card15,
-    card15,
-    card15,
-    card15,
-    card15,
+    card40,
+    card40,
+    card40,
+    card40,
+    card40,
+    card1,
+    card2,
     card3,
-    card3,
+    card4,
+    card6,
     card14,
 ]
 rest = [card2, card2, card5, card5, card5, card13, card7, card8, card9, card10, card22]

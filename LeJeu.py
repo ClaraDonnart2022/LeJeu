@@ -8,6 +8,7 @@ from argparse import ArgumentTypeError
 from re import L
 from random import shuffle
 from random import choice
+from random import randint
 
 
 HADRI = 1
@@ -17,6 +18,7 @@ AMOUR = 10
 BOUFFE = 11
 PICOLE = 12
 BEAUF = 13
+ACTION = 14
 NB_OF_CARD_IN_DECK = 20
 
 
@@ -132,21 +134,44 @@ class Game:
         players = ["Hadri", "Clarou"]
 
         """ Définition des decks """
-        from deck import deck1, deck2, rest, card48
+        from deck import deck1, deck2, rest, card48, card64
 
         self.current = Player(players[0], deck1)
         self.other = Player(players[1], deck2)
         # Spécifique aux cartes permettants de choisir dans les cartes restantes
         self.rest = rest
-        self.interrupt = [card48]
+        self.interrupt = [[], []]
+        self.interrupt[0] = [card48]
+        self.interrupt[1] = [card64]
         self.discard = Deck([])
+
+    def number_of_arg_activ(self):
+        """Retourne le nombre d'arguments actifs d'un joueur"""
+        from deck import card61
+
+        for card in self.current.ingame_arg:
+            # Spécifique à la carte 61
+            if card == card61:
+                if len(self.current.ingame_arg) > len(self.other.ingame_arg):
+                    card.isactiv = True
+                else:
+                    card.isactiv = False
+
+        l = [card for card in self.current.ingame_arg if card.isactiv]
+        return len(l)
 
     def discard_card(self, card, player):
         """Permet de défausser une carte à partir d'une main de joueur
         prend en argument une carte et un joueur
         ne retourne rien"""
-        self.discard.append(card)
-        player.hand.cards.remove(card)
+        from deck import card65
+
+        if card == card65:
+            player.deck.append(card)
+            player.deck.shuffle()
+        else:
+            self.discard.append(card)
+            player.hand.cards.remove(card)
 
     def discard_type(self, istype, player):
         """Prend en argument un type de carte et un joueur et défausse
@@ -223,20 +248,33 @@ class Game:
     def action_before_turn(self):
         """Effectue les actions passives de début de tours pour l'instant seulement Déconcentration (num 47)"""
         # Vérifie si on a utilisé la carte Déconcentration
-        try:
-            # Si cela fait 2 tours que la carte a été jouée
-            if (self.nb_of_turn - self.current.deconcentration) // 2 >= 2:
-                # On remet l'argument actif
-                for card in self.current.ingame_arg:
-                    card.isactiv = True
-                self.current.deconcentration = None
-        except (TypeError, AttributeError) as e:
+        if len(self.current.deconcentration) > 0:
+            list_remove = []
+            for el in self.current.deconcentration:
+                # Si cela fait 2 tours que la carte a été jouée
+                if (self.nb_of_turn - el[0]) // 2 >= 2:
+                    # On remet l'argument actif
+                    i = 0
+                    card = self.current.cards[i]
+                    # tant qu'on a pas trouvé la carte désactivée on itère
+                    while card != el[1]:
+                        i += 1
+                        card = self.current.cards[i]
+                    # On la réactive et on la sort de la liste désactivée
+                    self.current.cards[i].isactiv = True
+                    print("Votre argument est de nouveau actif")
+                    # On retire l'élément de la liste deconcentration
+                    list_remove = list_remove + [el]
+            for el in list_remove:
+                self.current.deconcentration.remove(el)
+        else:
             pass
 
-    def interruption(self):
+    def interruption(self, time: int):
         """Verifie la possibilité d'interruption (possession d'une certaine carte)
         Demande quelle carte jouer dans ce cas
-        Joue la carte"""
+        Joue la carte
+        prends en argument time in {0,1} pour l'interruption avant de jouer ou pendant"""
         from deck import card48
 
         # On regarde si l'intersection entre l'ens des cartes de la main du joueur adverse
@@ -244,10 +282,12 @@ class Game:
         # est non nul
         interruptable = []
         for card in self.other.cards:
-            for card_ref in self.interrupt:
+            for card_ref in self.interrupt[time]:
                 if card == card_ref:
-                    # Pour l'instant on a que celle-ci qui interrupt
+                    # Spécifique à l'interruption 48
                     if card == card48 and self.count_of_card_played >= 2:
+                        interruptable.append(card)
+                    else:
                         interruptable.append(card)
         # Si c'est le cas on demande quelle carte jouer et on la joue
         if len(interruptable) > 0:
@@ -255,10 +295,10 @@ class Game:
             print(Deck(interruptable))
             try:
                 numcardplay = int(input("Quelle carte voulez-vous jouer?"))
-                self.card_played = interruptable[numcardplay - 1]
+                card = interruptable[numcardplay - 1]
                 # On défausse la carte et on joue son effet
-                self.discard_card(self.card_played, self.other)
-                self.card_played.play(self)
+                self.discard_card(card, self.other)
+                card.play(self)
             except ValueError:
                 print("Ce n'est pas un numéro")
             except IndexError:
@@ -266,6 +306,7 @@ class Game:
 
     def turn(self):
         """Gère un tour de jeu"""
+
         # TODO: gérer mettre un numéro à la place de j
         self.action_before_turn()
         # Si une carte de passe-tour (sieste inopinée) a été jouée, le joueur passe son tour
@@ -303,6 +344,11 @@ class Game:
                     try:
                         numcardplay = int(input("Laquelle?"))
                         self.card_played = self.current.cards[numcardplay - 1]
+                        interrupt = input(
+                            f"La carte {self.card_played} va être jouée est-ce que {self.other.name} veut intervenir? (i)"
+                        )
+                        if interrupt == "i":
+                            self.interruption(1)
                         # Si la carte est jouable
                         if self.current.playable_card(self.card_played):
                             # On défausse la carte et on joue son effet
@@ -323,14 +369,17 @@ class Game:
 
                 # S'il est interrompu
                 elif self.rep == "i":
-                    self.interruption()
-                print(f"Vous avez {self.current.number_of_arg_activ()} argument(s)\n")
+                    self.interruption(0)
+                print(
+                    f"{self.current.name} a {self.number_of_arg_activ()} argument(s)\n"
+                )
 
         else:
             self.current.allowed_to_play[0] = True
         self.current.arg_played = 0
         self.current.allowed_to_play[1] = NB_OF_CARD_IN_DECK
         self.current.type_of_cards_not_allowed = []
+        self.current.cards_not_allowed = []
         self.current, self.other = self.other, self.current
 
 
@@ -345,8 +394,10 @@ class Player:
         # Et aux cartes qui impose de ne pas jouer plus de x cartes (ex: Posé num 19)
         # 3eme arg: "allowed_to_draw" spécifique à la carte matin difficile (num 31)
         self.allowed_to_play = [True, NB_OF_CARD_IN_DECK, True]
-        # Utile pour Massage (num51)
+        # Utile pour Massage par exemple (num51)
         self.type_of_cards_not_allowed = []
+        # Utile pour Fuck (num 64) -> contrer une action
+        self.cards_not_allowed = []
         # Spécifique à la carte roi de la bouffe (num 14) et princesse des coeurs (num 16)
         # le 0 initialise le nombre de cartes *3e argument*(ex: BOUFFE) jouées
         # Le deuxième argument a pour but de stocker la carte quand elle arrivera
@@ -355,32 +406,40 @@ class Player:
         self.princesse_des_coeurs = [0, None, AMOUR]
         # Utile pour les cartes qui demande de discard un argument
         self.ingame_arg = []
-        # Utile pour Déconcentration (num 47): argument inactif pendant deux tours
-        # self.inactiv_arg = []
         # Utile pour Armure  (num 39) de le mettre comme un élément de Player
         self.arg_played = 0
-        # Utile pour Réfléchissant (nnum46)
+        # Utile pour Réfléchissant (num 46)
         self.last_played = None
+        # Utile pour Déconcentration (num 47)
+        self.deconcentration = []
 
     @property
     def cards(self):
         return self.hand.cards
 
-    def number_of_arg_activ(self):
-        """Retourne le nombre d'arguments actifs d'un joueur"""
-        l = [card for card in self.ingame_arg if card.isactiv]
-        return len(l)
-
     def playable_card(self, card):
         """Test si une carte est jouable pour un joueur à un instant donné -> retourne un booléen"""
         test1 = self.arg_played < 1 or card.arg == False
-        # Spécifique à la carte Massage (num 51)
+        # Spécifique à la carte Massage (num 51) et à la carte les potes avant les p*** (num 62)
+
         test2 = True
         for type1 in card.type:
             for type2 in self.type_of_cards_not_allowed:
                 if type1 == type2:
                     test2 = False
-        return test1 and test2
+
+        # Spécifique à la carte silence radio (num 63)
+        test3 = True
+        if ACTION in self.type_of_cards_not_allowed:
+            if card.arg == 0:
+                test3 = False
+
+        # Spécifique à la carte Fuck (num64)
+        test4 = True
+        if card in self.cards_not_allowed:
+            test4 = False
+
+        return test1 and test2 and test3 and test4
 
     def discard_argument(self):
         """Défausse un argument d'un joueur s'il en a des défaussables"""
@@ -397,18 +456,20 @@ class Player:
             card = choice(L.cards)
             self.ingame_arg.remove(card)
 
-    def hide_argument(self):
-        """Rend un argument d'un joueur inutile s'il en a"""
+    def hide_argument(self, game):
+        """Rend un argument d'un joueur inutile s'il en a -> Retourne l'argument caché ou None s'il n'y en a pas"""
 
         # Si l'adversaire a pas d'argument
-        if self.number_of_arg_activ() <= 0:
+        if game.number_of_arg_activ() <= 0:
             print("Il n'y a pas d'arguments actifs votre action est inutile")
-
+            return None
         # Si l'adversaire a des arguments
         else:
             print(f"Un argument est caché chez {self.name}")
-            card = choice(self.ingame_arg)
+            hidable_card = [card for card in self.ingame_arg if card.isactiv == True]
+            card = choice(hidable_card)
             card.isactiv = False
+            return card
 
     def __str__(self):
         return " \n".join(
