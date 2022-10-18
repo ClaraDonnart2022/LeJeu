@@ -553,6 +553,12 @@ def play68(game):
         game.current.cards.append(card)
 
 
+@decorate_play
+def play69(game):
+    """Grand froid"""
+    game.other.grandfroid = True
+
+
 def cards_deck_to_deck(cards, deck_recieve, deck_send):
     """Passe une liste de carte du deck_send au deck_recieve:
     prend en argument la liste le deck1 et le deck2"""

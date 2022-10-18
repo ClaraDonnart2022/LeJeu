@@ -412,6 +412,8 @@ class Player:
         # Le troisième argument réfère au type de carte qui l'active
         self.roi_de_la_bouffe = [0, None, BOUFFE]
         self.princesse_des_coeurs = [0, None, AMOUR]
+        # spécifique à la carte grand froid
+        self.grandfroid = False
 
         # Utile pour les cartes qui demande de discard un argument
         self.ingame_arg = []
@@ -452,7 +454,11 @@ class Player:
 
         # Carte Grand froid -> juste la partie ne peux pas jouer d'argument pour dépasser 4
         test5 = True
-        if game.number_of_arg_activ(game.current) >= 3 and card.arg == True:
+        if (
+            game.number_of_arg_activ(game.current) >= 3
+            and card.arg == True
+            and self.grandfroid == 1
+        ):
             test5 = False
 
         return test1 and test2 and test3 and test4 and test5
