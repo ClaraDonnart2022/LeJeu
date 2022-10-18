@@ -525,6 +525,34 @@ def play65(game):
     game.current.cards_not_allowed.append(game.card_played)
 
 
+@decorate_play
+def play66(game):
+    """Blague de beauf: Votre prochaine carte Beauf est jouée deux fois"""
+    game.current.double_play_type.append(BEAUF)
+
+
+@decorate_type
+@decorate_play
+def play67(game):
+    """Bébou mignon: ajoute la carte Bébou sérieux dans votre main et vous piochez une carte Amour"""
+    game.current.cards.append(card68)
+    card68.position.remove(card68)
+    card = game.current.deck.draw_type([AMOUR])
+    if card is not None:
+        game.current.cards.append(card)
+
+
+@decorate_type
+@decorate_play
+def play68(game):
+    """Bébou sérieux: ajoute la carte Bébou mignon dans votre main et vous piochez une carte Bouffe"""
+    game.current.cards.append(card67)
+    card67.position.remove(card67)
+    card = game.current.deck.draw_type([BOUFFE])
+    if card is not None:
+        game.current.cards.append(card)
+
+
 def cards_deck_to_deck(cards, deck_recieve, deck_send):
     """Passe une liste de carte du deck_send au deck_recieve:
     prend en argument la liste le deck1 et le deck2"""
@@ -532,7 +560,7 @@ def cards_deck_to_deck(cards, deck_recieve, deck_send):
         for card in cards:
             deck_recieve.cards.append(card)
             deck_send.cards.remove(card)
-    except TypeError:
+    except ValueError:
         pass
 
 
@@ -889,25 +917,47 @@ card65 = Card(
     "(Argument) Je l'ai fait hier: Quand cet argument est défaussé il revient dans votre deck",
     0,
 )
+card66 = Card(
+    HADRI,
+    play66,
+    "Blague de beauf: Votre prochaine carte Beauf est jouée deux fois",
+    0,
+    type=[BEAUF],
+)
+card67 = Card(
+    CLAROU,
+    play67,
+    "Bébou mignon: ajoute la carte Bébou sérieux dans votre main et vous piochez une carte Amour",
+    0,
+    type=[AMOUR],
+)
+card68 = Card(
+    CLAROU,
+    play68,
+    "Bébou sérieux: ajoute la carte Bébou mignon dans votre main et vous piochez une carte Bouffe",
+    0,
+    type=[BOUFFE],
+)
 l1 = [
-    card65,
-    card65,
-    card65,
-    card65,
-    card65,
+    card66,
+    card56,
+    card46,
+    card36,
+    card26,
     card64,
-    card7,
-    card8,
-    card9,
-    card10,
-    card40,
-    card45,
-    card45,
+    card12,
+    card42,
+    card32,
+    card52,
+    card2,
+    card4,
+    card5,
 ]
 
+
 l2 = [
-    card40,
-    card40,
+    card68,
+    card67,
     card40,
     card40,
     card40,

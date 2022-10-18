@@ -41,6 +41,7 @@ class Card:
         self.type = type
         self.discardable = discardable
         self.isactiv = True
+        self.position = None
 
     def __str__(self):
         return self.description
@@ -134,7 +135,7 @@ class Game:
         players = ["Hadri", "Clarou"]
 
         """ Définition des decks """
-        from deck import deck1, deck2, rest, card48, card64
+        from deck import deck1, deck2, rest, card48, card64, card67, card68
 
         self.current = Player(players[0], deck1)
         self.other = Player(players[1], deck2)
@@ -145,7 +146,7 @@ class Game:
         self.interrupt[1] = [card64]
         self.discard = Deck([])
 
-    def number_of_arg_activ(self):
+    def number_of_arg_activ(self, player):
         """Retourne le nombre d'arguments actifs d'un joueur"""
         from deck import card61
 
@@ -157,21 +158,17 @@ class Game:
                 else:
                     card.isactiv = False
 
-        l = [card for card in self.current.ingame_arg if card.isactiv]
+        l = [card for card in player.ingame_arg if card.isactiv]
         return len(l)
 
     def discard_card(self, card, player):
         """Permet de défausser une carte à partir d'une main de joueur
         prend en argument une carte et un joueur
         ne retourne rien"""
-        from deck import card65
 
-        if card == card65:
-            player.deck.append(card)
-            player.deck.shuffle()
-        else:
-            self.discard.append(card)
-            player.hand.cards.remove(card)
+        self.discard.append(card)
+        card.position = self.discard.cards
+        player.hand.cards.remove(card)
 
     def discard_type(self, istype, player):
         """Prend en argument un type de carte et un joueur et défausse
@@ -350,9 +347,20 @@ class Game:
                         if interrupt == "i":
                             self.interruption(1)
                         # Si la carte est jouable
-                        if self.current.playable_card(self.card_played):
+                        if self.current.playable_card(self, self.card_played):
                             # On défausse la carte et on joue son effet
                             self.discard_card(self.card_played, self.current)
+
+                            # Utile pour Blague de Beauf (num 66): double play la prochaine carte beauf
+                            # Si le type est doublé
+                            for type1 in self.card_played.type:
+                                for type2 in self.current.double_play_type:
+                                    if type1 == type2:
+                                        # Le joue une fois de plus
+                                        self.card_played.play(self)
+                                        # Retire le type de la liste des double
+                                        self.card_played.type.remove(type1)
+
                             self.card_played.play(self)
                             # Utile pour Réfléchissant (num 46): garde en mémoire la dernière carte jouée
                             self.current.last_played = self.card_played
@@ -371,7 +379,7 @@ class Game:
                 elif self.rep == "i":
                     self.interruption(0)
                 print(
-                    f"{self.current.name} a {self.number_of_arg_activ()} argument(s)\n"
+                    f"{self.current.name} a {self.number_of_arg_activ(self.current)} argument(s)\n"
                 )
 
         else:
@@ -404,6 +412,7 @@ class Player:
         # Le troisième argument réfère au type de carte qui l'active
         self.roi_de_la_bouffe = [0, None, BOUFFE]
         self.princesse_des_coeurs = [0, None, AMOUR]
+
         # Utile pour les cartes qui demande de discard un argument
         self.ingame_arg = []
         # Utile pour Armure  (num 39) de le mettre comme un élément de Player
@@ -412,12 +421,14 @@ class Player:
         self.last_played = None
         # Utile pour Déconcentration (num 47)
         self.deconcentration = []
+        # Utile pour Blague de Beauf (num 66)
+        self.double_play_type = []
 
     @property
     def cards(self):
         return self.hand.cards
 
-    def playable_card(self, card):
+    def playable_card(self, game, card):
         """Test si une carte est jouable pour un joueur à un instant donné -> retourne un booléen"""
         test1 = self.arg_played < 1 or card.arg == False
         # Spécifique à la carte Massage (num 51) et à la carte les potes avant les p*** (num 62)
@@ -439,10 +450,18 @@ class Player:
         if card in self.cards_not_allowed:
             test4 = False
 
-        return test1 and test2 and test3 and test4
+        # Carte Grand froid -> juste la partie ne peux pas jouer d'argument pour dépasser 4
+        test5 = True
+        if game.number_of_arg_activ(game.current) >= 3 and card.arg == True:
+            test5 = False
+
+        return test1 and test2 and test3 and test4 and test5
 
     def discard_argument(self):
+        # TODO: faire une fonction discard_type
         """Défausse un argument d'un joueur s'il en a des défaussables"""
+        from deck import card65
+
         l = [c for c in self.ingame_arg if c.discardable]
         L = Deck(l)
 
@@ -454,13 +473,20 @@ class Player:
         elif len(self.ingame_arg) > 0 and len(l) != 0:
             print(f"Un argument est défaussé chez {self.name}")
             card = choice(L.cards)
+            if card == card65:
+                self.deck.append(card)
+                self.deck.shuffle()
+                card.position = self.deck.cards
+            else:
+                self.discard.append(card)
+                card.position = self.discard.cards
             self.ingame_arg.remove(card)
 
     def hide_argument(self, game):
         """Rend un argument d'un joueur inutile s'il en a -> Retourne l'argument caché ou None s'il n'y en a pas"""
 
         # Si l'adversaire a pas d'argument
-        if game.number_of_arg_activ() <= 0:
+        if game.number_of_arg_activ(game.other) <= 0:
             print("Il n'y a pas d'arguments actifs votre action est inutile")
             return None
         # Si l'adversaire a des arguments
