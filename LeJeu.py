@@ -135,12 +135,12 @@ class Game:
         players = ["Hadri", "Clarou"]
 
         """ Définition des decks """
-        from deck import deck1, deck2, rest, card48, card64, card67, card68
+        from deck import deck1, deck2, cards_rest, card48, card64
 
         self.current = Player(players[0], deck1)
         self.other = Player(players[1], deck2)
         # Spécifique aux cartes permettants de choisir dans les cartes restantes
-        self.rest = rest
+        self.rest = cards_rest
         self.interrupt = [[], []]
         self.interrupt[0] = [card48]
         self.interrupt[1] = [card64]
@@ -225,19 +225,18 @@ class Game:
 
         # test s'il reste des cartes du type ou de la couleur choisie
         if len(deck_spe) > 0:
-            card_chosen_list = []
+            cards_chosen_list = []
             print("Voici les cartes:")
             # Permet de choisir les cartes voulues dans la liste
-            while len(deck_spe) > 0 and len(card_chosen_list) < NB_OF_CARDS:
+            while len(deck_spe) > 0 and len(cards_chosen_list) < NB_OF_CARDS:
                 print(" \n".join(f"{i+1}. {c}" for i, c in enumerate(deck_spe)))
                 try:
-                    card_chosen = deck_spe.pop(
-                        int(input("Quelle carte voulez-vous?")) - 1
-                    )
-                    card_chosen_list.append(card_chosen)
+                    card_chosen = deck_spe[int(input("Quelle carte voulez-vous?")) - 1]
+                    deck.cards.remove(card_chosen)
+                    cards_chosen_list.append(card_chosen)
                 except ValueError:
                     pass
-            return card_chosen_list
+            return cards_chosen_list
         else:
             print("Il n'en reste plus")
             return None
@@ -395,7 +394,8 @@ class Player:
     def __init__(self, name: str, deck):
         self.name = name
         self.deck = deck
-        self.hand = Hand(deck)
+        # self.hand = Hand(deck)
+        self.hand = None
         # Spécifique à Jeu de rôle (num 25): pioche à la place de l'autre à son prochain tour
         self.draw_instead = False
         # 1er arg: Spécifiques à la carte Sieste inopinée (passe le prochain tour de l'aversaire) num 17
