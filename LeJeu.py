@@ -214,14 +214,15 @@ class Game:
         le deck (ou hand)
         et le nombre de cartes à prendre et permet au joueur de choisir dans les cartes restantes d'un deck
         des cartes spéciales
-        Retourne les cartes choisies ou None"""
+        Retourne les cartes choisies ou None
+        ATTENTION: ne les supprime pas du deck"""
         # Crée la liste des cartes concernés dans les cartes restantes
         if color is not None and type is None:
             deck_spe = [card for card in deck.cards if card.color == color]
         elif type is not None and color is None:
             deck_spe = [card for card in deck.cards if type in card.type]
         elif type is None and color is None:
-            deck_spe = deck.cards
+            deck_spe = deck.cards.copy()
 
         # test s'il reste des cartes du type ou de la couleur choisie
         if len(deck_spe) > 0:
@@ -231,8 +232,10 @@ class Game:
             while len(deck_spe) > 0 and len(cards_chosen_list) < NB_OF_CARDS:
                 print(" \n".join(f"{i+1}. {c}" for i, c in enumerate(deck_spe)))
                 try:
-                    card_chosen = deck_spe[int(input("Quelle carte voulez-vous?")) - 1]
-                    deck.cards.remove(card_chosen)
+                    card_chosen = deck_spe.pop(
+                        int(input("Quelle carte voulez-vous?")) - 1
+                    )
+                    # deck.cards.remove(card_chosen)
                     cards_chosen_list.append(card_chosen)
                 except ValueError:
                     pass

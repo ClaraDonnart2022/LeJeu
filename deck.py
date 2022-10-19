@@ -566,6 +566,7 @@ def cards_deck_to_deck(cards, deck_recieve, deck_send):
         for card in cards:
             deck_recieve.cards.append(card)
             deck_send.cards.remove(card)
+            card.position = deck_recieve
     except ValueError:
         pass
 
@@ -945,35 +946,36 @@ card68 = Card(
     type=[BOUFFE],
 )
 l1 = [
-    card4,
-    card4,
-    card4,
-    card4,
-    card4,
-    card4,
-    card4,
-    card4,
-    card4,
-    card4,
-    card2,
-    card4,
-    card5,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card4,
+    #    card2,
+    #    card4,
+    #    card5,
 ]
-
-
+#
+#
 l2 = [
-    card68,
-    card67,
-    card40,
-    card40,
-    card40,
-    card1,
-    card2,
-    card3,
-    card4,
-    card6,
-    card14,
+    #    card68,
+    #    card67,
+    #    card40,
+    #    card40,
+    #    card40,
+    #    card1,
+    #    card2,
+    #    card3,
+    #    card4,
+    #    card6,
+    #    card14,
 ]
+
 cards_rest = [
     card1,
     card2,
@@ -1053,6 +1055,3 @@ cards_rest = [
 deck1 = Deck(l1)
 deck2 = Deck(l2)
 cards_rest = Deck(cards_rest)
-
-deck1.shuffle()
-deck2.shuffle()
