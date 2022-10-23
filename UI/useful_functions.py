@@ -31,6 +31,7 @@ def create_hand(cards, xoffset, yoffset, hidden=False):
     n = len(cards)
     if n > 10:
         raise DisplayError("Hand is to long")
+        # FIXME: Here we should change the display instead
     else:
         startx = xoffset - 105 / 2 * n
 
