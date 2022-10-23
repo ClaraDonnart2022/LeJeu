@@ -1,10 +1,27 @@
 # LeJeu
- En cours : Code du jeu inventé par Hadrien Nauroy
 
-Règles: Le but du jeu est de ne pas faire la vaisselle. 
-Pour convaincre son adversaire que ce n'est pas son tour 
-(et remoirter la partie), un joueur doit être le premier
-à posséder 5 arguments ou être le joueur possédant le 
+## Dependencies
+
+- Pygame for UI
+
+## How to Play
+
+To play in command line:
+
+    py main.py
+
+
+To play with UI:
+
+    py soon_available.py
+
+## Regles du jeu
+En cours : Code du jeu inventé par Hadrien Nauroy
+
+Règles: Le but du jeu est de ne pas faire la vaisselle.
+Pour convaincre son adversaire que ce n'est pas son tour
+(et remporter la partie), un joueur doit être le premier
+à posséder 5 arguments ou être le joueur possédant le
 plus d'arguments valides à la fin de la partie.
 
 La partie est composée de deux phases: Préparation et Débat
@@ -14,7 +31,7 @@ de sa couleur. Ensuite, les joueurs choisissent succesivement et chacun leur tou
 Le joueur qui a choisi en deuxième commencera la phase de débat
 
 Les cartes ainsi choisies sont ensuite mélangées pour former le deckde chaque joueur
-Au début de la phase de débat chaque joueur pioche trois cartes de son deck. Il peut alors decider d'en renvoyer autant qu'il veut. 
+Au début de la phase de débat chaque joueur pioche trois cartes de son deck. Il peut alors decider d'en renvoyer autant qu'il veut.
 Il mélange alors le deck et en re pioche autant
 
 Ensuite chaque tour de joueur est composé de la façon suivante:
