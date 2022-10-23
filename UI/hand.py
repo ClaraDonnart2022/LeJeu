@@ -1,5 +1,5 @@
 """
-The Card class
+The Hand class
 
 Contains a list of Card elements
 """
@@ -9,9 +9,6 @@ import pygame
 
 class Hand:
     def __init__(self, cards) -> None:
-        """
-        Cards are Cards object here
-        """
         self.cards = cards
 
     def draw(self, screen):

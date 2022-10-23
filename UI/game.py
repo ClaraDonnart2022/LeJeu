@@ -51,10 +51,10 @@ class Game:
                 if event.type == pygame.QUIT:
                     return
 
+            # update display
             self.screen.blit(self.background, (0, 0))
             self.hand.draw(self.screen)
             self.opponent.draw(self.screen)
-
             pygame.display.update()
             pygame.display.flip()
 

@@ -77,6 +77,8 @@ class Card:
         """
         :param: pos a position
         :return: bool : if position in card
+
+        It is used to detect the mouse and highlight the card if needed
         """
         posx, posy = pos
         if (
@@ -91,6 +93,10 @@ class Card:
 
 
 def draw_text(screen, text, size, x, y):
+    """
+    Draw some text on the screen
+    :params: screen, text, size of text and position of text
+    """
     pygame.font.init()
     font = pygame.font.SysFont("comicsans", size)
     render = font.render(text, 1, (0, 0, 0))
