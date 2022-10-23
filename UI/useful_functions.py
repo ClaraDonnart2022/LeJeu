@@ -3,6 +3,7 @@ A set of usefull fonctions
 """
 
 import pygame
+import json
 from card import Card
 from hand import Hand
 

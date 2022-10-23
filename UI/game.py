@@ -4,9 +4,13 @@ The game class
 it uses pygame to display the game
 """
 
-
+# global import
 import pygame
-from useful_functions import create_hand
+import socket
+import json
+
+# local import
+import config
 
 
 class Game:
@@ -23,24 +27,13 @@ class Game:
         self.screen.blit(self.background, (0, 0))
         pygame.display.flip()
 
+        # add socket to discuss with server
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((config.HOST, config.PORT))
+
         # test / will be in run for update
-        cards = [
-            {
-                "color": "blue",
-                "picture": "img\sheep.jpg",
-                "description": ["Super:", "une super carte"],
-            },
-            {
-                "color": "pink",
-                "picture": "img\sheep.jpg",
-                "description": ["Super:", "une super carte"],
-            },
-            {
-                "color": "gray",
-                "picture": "img\sheep.jpg",
-                "description": ["Super:", "une super carte"],
-            },
-        ]
+        cards = json.load(self.socket.recv())
+        print(cards)
         self.hand = create_hand(cards, 500, 600)
         self.opponent = create_hand(cards, 700, 20, hidden=True)
 
