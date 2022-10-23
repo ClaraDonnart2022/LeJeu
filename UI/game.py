@@ -2,6 +2,9 @@
 The game class
 
 it uses pygame to display the game
+
+A host server should run on the machine for this script to work properly
+To do this open an other terminal and run "py host.py"
 """
 
 # global import
@@ -11,6 +14,7 @@ import json
 
 # local import
 import config
+from useful_functions import create_hand
 
 
 class Game:
@@ -31,9 +35,12 @@ class Game:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((config.HOST, config.PORT))
 
-        # test / will be in run for update
-        cards = json.load(self.socket.recv())
-        print(cards)
+        # retrieve data from server
+        self.socket.sendall(b"data please")
+        data = dict(json.loads(self.socket.recv(1024)))
+        cards = data["cards"]
+
+        # update dispay objects
         self.hand = create_hand(cards, 500, 600)
         self.opponent = create_hand(cards, 700, 20, hidden=True)
 
@@ -42,7 +49,19 @@ class Game:
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    self.socket.sendall(b"close connection")
                     return
+
+            # retrieve data from server
+            # FIXME, we should only do this when needed
+            # ie. when action is trigered from whatever side
+            self.socket.sendall(b"data please")
+            data = dict(json.loads(self.socket.recv(1024)))
+            cards = data["cards"]
+
+            # update dispay objects
+            self.hand = create_hand(cards, 500, 600)
+            self.opponent = create_hand(cards, 700, 20, hidden=True)
 
             # update display
             self.screen.blit(self.background, (0, 0))
