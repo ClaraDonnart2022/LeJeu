@@ -1047,9 +1047,7 @@ cards_rest = [
     card68,
 ]
 
-# CARD_HADRI = [card for card in all if card.color == HADRI]
-# CARD_CLAROU = [card for card in all if card.color == CLAROU]
-# cards_rest = [card for card in all if card.color == NEUTRE]
+
 """Création des deux decks de départ"""
 
 deck1 = Deck(l1)

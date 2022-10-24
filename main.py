@@ -3,6 +3,14 @@ from deck import cards_deck_to_deck
 
 game = Game()
 
+# for card in game.current.deck.cards:
+#   card.position = game.current.deck.cards
+# for card in game.other.deck.cards:
+#   card.position = game.other.deck.cards
+# for card in game.rest.cards:
+#   card.position = game.rest.cards
+
+
 ############################################# PHASE DE DECKBUILDING ############################################
 
 print("############# C'est au tour de Hadri de choisir ses cartes ###############")
