@@ -3,6 +3,7 @@ The Card class
 """
 
 import pygame
+from math import cos, sin, atan
 
 # local import
 
@@ -17,6 +18,12 @@ class Card:
         self.picture = pygame.image.load(picture)
         self.descriprion = description
         self.hidden = hidden
+
+        # to handle movement
+        self.speedx = None
+        self.speedy = None
+        self.destx = None
+        self.desty = None
 
     def draw(self, screen, mul=1):
         """
@@ -89,6 +96,29 @@ class Card:
         ):
             return True
         else:
+            return False
+
+    def set_movement(self):
+        self.destx = 650
+        self.desty = 300
+        angle = atan((self.destx - self.x) / (self.desty - self.y))
+        self.speedx = -100 * sin(angle)
+        self.speedy = -100 * cos(angle)
+
+    def moove(self):
+
+        # FIXME: Idk why wee need such a tolerance
+        if (
+            self.x > self.destx - 50
+            and self.x < self.destx + 50
+            and self.y > self.desty - 50
+            and self.y < self.desty + 50
+        ):
+            return True
+
+        else:
+            self.x += self.speedx
+            self.y += self.speedy
             return False
 
 
